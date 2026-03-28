@@ -1,32 +1,41 @@
 # ERD Notes
 
-Use this file to keep the ERD aligned with the real Firebase schema.
+This draft reflects the current backend structure that is already scaffolded in code.
 
-## Expected Minimum ERD Content
+## Current Collections and Entities
 
-- entity names
-- field names
-- primary identifiers
-- foreign-key style references
-- one-to-many / many-to-one relationships
+### `users`
 
-## Consistency Check
+- `id` / document id
+- `email`
+- `displayName`
 
-Before submission, confirm:
+### `users/{userId}/meal_logs`
 
-- collection names in Firebase match the ERD exactly
-- field names in code match the ERD exactly
-- no collection appears in Firebase without being represented in the ERD
-- no field is described in the ERD but missing from the implementation without explanation
+- `id` / document id
+- `userId`
+- `mealName`
+- `calories`
+- `mealType`
+- `loggedAt`
 
-## Suggested Entities
+## Relationships
 
-- users
-- meals
-- meal_logs
-- preferences
-- auth_provider_links
+- One `user` can own many `meal_logs`
+- Every `meal_log` belongs to one `user`
 
-## Final Deliverable Placeholder
+## Code References
 
-Add the final ERD image or exported PDF to the report package and link it from the report.
+- `lib/src/core/firebase/firebase_collection_names.dart`
+- `lib/src/domain/entities/app_user.dart`
+- `lib/src/domain/entities/meal_log.dart`
+- `lib/src/data/models/app_user_model.dart`
+- `lib/src/data/models/meal_log_model.dart`
+- `lib/src/data/repositories/firebase_meal_log_repository.dart`
+
+## ERD Alignment Check Before Submission
+
+- Keep collection names exactly as `users` and `meal_logs`
+- Keep field names exactly aligned with the model `toMap()` methods
+- Add any new collections to this file as soon as they are introduced
+- Export the final ERD as an image or PDF and include it in the report package

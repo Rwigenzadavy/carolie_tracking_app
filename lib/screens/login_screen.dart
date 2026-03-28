@@ -32,9 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Login UI is ready. Firebase auth wiring comes next.'),
-      ),
+      const SnackBar(content: Text('Sign-in form validated successfully.')),
     );
   }
 

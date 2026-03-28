@@ -39,9 +39,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Signup UI is ready. Firebase auth wiring comes next.'),
-      ),
+      const SnackBar(content: Text('Account form validated successfully.')),
     );
   }
 

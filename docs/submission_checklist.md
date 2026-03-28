@@ -2,12 +2,12 @@
 
 ## Code and App
 
+- [x] `flutter analyze` passes
+- [x] `flutter test` passes
+- [x] At least one unit test exists
+- [x] Widget tests exist
 - [ ] App runs on emulator or physical device
-- [ ] `dart format .` has been run
-- [ ] `flutter analyze` passes
-- [ ] `flutter test` passes
-- [ ] At least one unit test exists
-- [ ] Widget tests exist
+- [ ] `dart format .` has been run on the final submission branch
 - [ ] No web/desktop demo is used for submission
 
 ## UI and Navigation
@@ -24,15 +24,15 @@
 - [ ] ERD matches actual Firebase structure
 - [ ] CRUD is implemented for required app features
 - [ ] Two authentication methods are implemented
-- [ ] Firebase security rules are documented
+- [x] Firebase security rules are documented
 - [ ] Firebase security rules are applied
 
 ## Documentation
 
 - [ ] Report PDF is complete
-- [ ] Setup instructions are accurate
-- [ ] GitHub repo link is public/shared
-- [ ] Known limitations section is written
+- [x] Setup instructions are accurate
+- [x] GitHub repo link is public/shared
+- [x] Known limitations section is written
 - [ ] AI use disclosure is included
 - [ ] In-text citations and references are included where needed
 
@@ -40,5 +40,5 @@
 
 - [ ] Demo video is recorded
 - [ ] Every team member presents a feature
-- [ ] Contribution tracker is filled out
+- [x] Contribution tracker is filled out
 - [ ] Final PDF is named `Group#_Final_Project_Submission.pdf`

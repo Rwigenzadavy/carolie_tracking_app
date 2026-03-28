@@ -2,6 +2,8 @@
 
 Flutter mobile application for a culturally relevant calorie-tracking experience.
 
+Repository: [github.com/Rwigenzadavy/carolie_tracking_app](https://github.com/Rwigenzadavy/carolie_tracking_app)
+
 ## Current Scope
 
 The repository currently includes:
@@ -27,6 +29,8 @@ The repository currently includes:
 3. Open an emulator or connect a physical device.
 4. Start the app with `flutter run`.
 
+The app currently boots into the calorie-tracker flow implemented from Figma. Login and signup screens are also present in the codebase and are ready for Firebase wiring.
+
 ## Quality Checks
 
 Run these before committing:
@@ -34,6 +38,11 @@ Run these before committing:
 - `dart format .`
 - `flutter analyze`
 - `flutter test`
+
+Current branch validation status:
+
+- `flutter analyze`: passing
+- `flutter test`: passing
 
 ## Project Structure
 
@@ -49,6 +58,18 @@ Run these before committing:
 - `lib/screens/`: login and signup screens
 - `test/`: widget and unit tests
 - `docs/`: report, demo, ERD, and submission scaffolding
+
+## Documentation Pack
+
+The `docs/` folder already contains working draft material for submission:
+
+- `docs/report_outline.md`: report draft content and structure
+- `docs/submission_checklist.md`: current completion status
+- `docs/demo_checklist.md`: demo plan for recording
+- `docs/erd_notes.md`: current schema draft based on the codebase
+- `docs/firebase_security_rules_notes.md`: report-ready draft rules notes
+- `docs/group_contribution_tracker_template.md`: filled contribution tracker draft from Git history
+- `docs/known_limitations_template.md`: current limitations and future work
 
 ## Mobile Submission Reminder
 
@@ -75,3 +96,9 @@ To make backend implementation safer later without disrupting the current UI flo
 - simple domain entities and data models for users and meal logs
 
 These files are intentionally not wired into the live app flow yet, so the current screens keep working while the backend layer is prepared incrementally.
+
+## Current Auth UI Behavior
+
+- Login and signup forms validate user input before submission
+- Success feedback is shown with a `SnackBar`
+- Firebase authentication is scaffolded in the data/domain layers, but not yet connected to the active app flow

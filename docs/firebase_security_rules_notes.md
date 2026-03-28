@@ -1,27 +1,43 @@
 # Firebase Security Rules Notes
 
-Use this file as the basis for the report section that explains how Firebase rules protect user data.
+This is the current report-ready draft based on the backend structure already present in the codebase.
 
-## Questions to Answer
+## Current Intended Access Model
 
-1. Which collections exist?
-2. Who can read each collection?
-3. Who can create each document?
-4. Who can update each document?
-5. Who can delete each document?
-6. Which fields should only be editable by the owner?
-7. Are there any admin-only paths?
+- Each authenticated user should only read and write their own user document
+- Each authenticated user should only read and write meal logs inside `users/{userId}/meal_logs`
+- Cross-user access should be denied
+- Public reads should remain disabled unless the team explicitly adds a public collection later
+
+## Draft Firestore Rules
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, create, update, delete: if request.auth != null
+        && request.auth.uid == userId;
+
+      match /meal_logs/{mealLogId} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == userId;
+      }
+    }
+  }
+}
+```
 
 ## Report Talking Points
 
-- Access should be scoped to authenticated users where appropriate.
-- User-owned data should be restricted with checks against `request.auth.uid`.
-- Public reads should be explicitly justified instead of left open by default.
-- Validation rules should protect document shape where possible.
-- Broad `allow read, write: if request.auth != null;` rules should be avoided unless the collection truly requires them.
+- Access is owner-scoped with `request.auth.uid == userId`
+- User profile data is not exposed to other authenticated users
+- Nested meal-log documents inherit the same owner-based restriction
+- The app should avoid broad authenticated-user-wide rules
+- If validation rules are added later, they should verify required fields such as `mealName`, `calories`, and `loggedAt`
 
-## Final Rules Placeholder
+## Final Verification Before Submission
 
-```txt
-Paste the final Firebase rules here before submission.
-```
+- Confirm the deployed Firebase rules match this document
+- Confirm the collection paths in Firebase match the ERD and repository code
+- Update this file if the team adds more collections or admin paths

@@ -1,17 +1,16 @@
 # Known Limitations and Future Work
 
-Use this template in the final report.
-
 ## Known Limitations
 
-- Authentication UI is present, but production auth flow may still need backend wiring.
-- Some screens may still need final responsive verification on multiple device sizes.
-- Firebase schema, CRUD coverage, and rules should be validated against the final ERD.
+- The active app entry point currently demonstrates the calorie-tracker Home and Log Meal flow; login and signup screens are implemented but not yet wired into the main navigation flow.
+- Firebase authentication and meal-log repositories are scaffolded in code, but production CRUD and authentication flows are not yet connected to the UI.
+- Advanced state management and full clean-architecture separation are only partially started.
+- Responsive verification still needs to be repeated on the exact device sizes used in the final demo.
 
 ## Future Work
 
-- Replace local screen switching with a full state-management solution.
-- Add complete Firebase CRUD flows for meals, meal logs, and user preferences.
-- Add SharedPreferences-backed settings.
-- Increase unit and widget test coverage.
-- Expand accessibility and empty/error/loading states.
+- Connect login and signup forms to Firebase Authentication
+- Add complete Create, Read, Update, and Delete flows for meal tracking data
+- Add SharedPreferences-backed user settings and persistence
+- Replace local screen switching with a scalable state-management solution
+- Increase widget and unit test coverage across authentication and backend flows
