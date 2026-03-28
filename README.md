@@ -40,7 +40,11 @@ Run these before committing:
 - `lib/main.dart`: app entry point
 - `lib/src/app.dart`: current calorie-tracker flow bootstrap
 - `lib/src/screens/`: Figma-based calorie tracker screens
+- `lib/src/domain/`: future app entities and repository contracts
+- `lib/src/data/`: Firebase-ready models and repository implementations
+- `lib/src/core/`: shared backend constants
 - `lib/src/theme/`: theme definitions
+- `lib/src/utils/`: copy and validation helpers
 - `lib/src/widgets/`: shared shell and navigation widgets
 - `lib/screens/`: login and signup screens
 - `test/`: widget and unit tests
@@ -60,3 +64,14 @@ Some rubric items still need fuller implementation, especially:
 - security rules
 - ERD finalization
 - final report and video assets
+
+## Backend Prep Added
+
+To make backend implementation safer later without disrupting the current UI flow, this branch now includes:
+
+- auth validation helpers for login and signup flows
+- repository interfaces for auth and meal logs
+- Firebase-backed repository scaffolding for auth and meal logs
+- simple domain entities and data models for users and meal logs
+
+These files are intentionally not wired into the live app flow yet, so the current screens keep working while the backend layer is prepared incrementally.
