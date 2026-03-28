@@ -1,4 +1,5 @@
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
+import 'package:carolie_tracking_app/src/utils/meal_copy.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,45 +14,45 @@ class LogMealScreen extends StatelessWidget {
   final VoidCallback onBackPressed;
   final ValueChanged<AppScreen> onTabSelected;
 
-  static const _dishes = [
+  static final _dishes = [
     (
       title: 'Jollof Rice',
-      subtitle: '~450 cal per serving',
+      subtitle: MealCopy.servingCalories(450),
       portions: ['1 plate', '½ plate', '1 cup'],
     ),
     (
       title: 'Egusi Soup with Fufu',
-      subtitle: '~520 cal per serving',
+      subtitle: MealCopy.servingCalories(520),
       portions: ['1 bowl', '½ bowl', '1 wrap'],
     ),
     (
       title: 'Suya (Beef)',
-      subtitle: '~280 cal per serving',
+      subtitle: MealCopy.servingCalories(280),
       portions: ['5 sticks', '3 sticks', '100g'],
     ),
     (
       title: 'Moi Moi',
-      subtitle: '~160 cal per serving',
+      subtitle: MealCopy.servingCalories(160),
       portions: ['1 wrap', '2 wraps', '100g'],
     ),
     (
       title: 'Pounded Yam',
-      subtitle: '~330 cal per serving',
+      subtitle: MealCopy.servingCalories(330),
       portions: ['1 wrap', '½ wrap', '200g'],
     ),
     (
       title: 'Akara (Bean Cake)',
-      subtitle: '~180 cal per serving',
+      subtitle: MealCopy.servingCalories(180),
       portions: ['3 pieces', '5 pieces', '1 piece'],
     ),
     (
       title: 'Fried Plantain',
-      subtitle: '~220 cal per serving',
+      subtitle: MealCopy.servingCalories(220),
       portions: ['1 medium', '1 large', '5 slices'],
     ),
     (
       title: 'Chin Chin',
-      subtitle: '~140 cal per serving',
+      subtitle: MealCopy.servingCalories(140),
       portions: ['1 handful', '1 cup', '50g'],
     ),
   ];

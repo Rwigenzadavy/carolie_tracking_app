@@ -1,4 +1,5 @@
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
+import 'package:carolie_tracking_app/src/utils/meal_copy.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,18 +14,18 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onLogMealPressed;
   final ValueChanged<AppScreen> onTabSelected;
 
-  static const _meals = [
+  static final _meals = [
     (
       imagePath: 'assets/figma/home/millet_image',
       title: 'Millet Porridge',
-      subtitle: 'Breakfast • 08:30 AM',
-      calories: '320 cal',
+      subtitle: MealCopy.mealTime('Breakfast', '08:30 AM'),
+      calories: MealCopy.calories(320),
     ),
     (
       imagePath: 'assets/figma/home/jollof_image',
       title: 'Jollof Rice & Plantain',
-      subtitle: 'Lunch • 01:15 PM',
-      calories: '650 cal',
+      subtitle: MealCopy.mealTime('Lunch', '01:15 PM'),
+      calories: MealCopy.calories(650),
     ),
   ];
 
