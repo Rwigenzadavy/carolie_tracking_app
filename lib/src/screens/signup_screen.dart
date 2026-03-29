@@ -339,6 +339,10 @@ class _SignupScreenState extends State<SignupScreen> {
         ],
       ),
     );
+
+    if (!mounted) return;
+    // ignore: use_build_context_synchronously
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _continueWithGoogle(BuildContext context) async {

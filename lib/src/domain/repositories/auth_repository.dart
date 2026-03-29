@@ -22,5 +22,7 @@ abstract class AuthRepository {
 
   Future<void> resendVerificationEmail();
 
+  Future<void> reloadUser();
+
   Future<void> signOut();
 }

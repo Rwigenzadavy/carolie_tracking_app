@@ -4,17 +4,25 @@ import 'package:carolie_tracking_app/src/domain/entities/app_user.dart';
 import 'package:carolie_tracking_app/src/domain/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 
-class AuthController extends ChangeNotifier {
+class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   AuthController(this._authRepository) {
     _subscription = _authRepository.watchAuthState().listen((user) {
       _currentUser = user;
       _isInitialized = true;
       notifyListeners();
     });
+    WidgetsBinding.instance.addObserver(this);
   }
 
   final AuthRepository _authRepository;
   StreamSubscription<AppUser?>? _subscription;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _authRepository.reloadUser();
+    }
+  }
 
   AppUser? _currentUser;
   bool _isBusy = false;
@@ -84,6 +92,7 @@ class AuthController extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     super.dispose();
   }
