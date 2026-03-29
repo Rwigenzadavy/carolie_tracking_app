@@ -1,10 +1,12 @@
+import 'package:carolie_tracking_app/src/screens/scan_barcode_screen.dart';
+import 'package:carolie_tracking_app/src/screens/voice_input_screen.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/utils/meal_copy.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class LogMealScreen extends StatelessWidget {
+class LogMealScreen extends StatefulWidget {
   const LogMealScreen({
     super.key,
     required this.onBackPressed,
@@ -13,6 +15,15 @@ class LogMealScreen extends StatelessWidget {
 
   final VoidCallback onBackPressed;
   final ValueChanged<AppScreen> onTabSelected;
+
+  @override
+  State<LogMealScreen> createState() => _LogMealScreenState();
+}
+
+class _LogMealScreenState extends State<LogMealScreen> {
+  String? _searchQuery;
+  bool _showScanBarcode = false;
+  bool _showVoiceInput = false;
 
   static final _dishes = [
     (
@@ -57,16 +68,93 @@ class LogMealScreen extends StatelessWidget {
     ),
   ];
 
+  void _openScanBarcode() {
+    setState(() {
+      _showScanBarcode = true;
+    });
+  }
+
+  void _openVoiceInput() {
+    setState(() {
+      _showVoiceInput = true;
+    });
+  }
+
+  void _closeScanBarcode() {
+    setState(() {
+      _showScanBarcode = false;
+    });
+  }
+
+  void _closeVoiceInput() {
+    setState(() {
+      _showVoiceInput = false;
+    });
+  }
+
+  void _onBarcodeScanned(String barcode) {
+    setState(() {
+      _showScanBarcode = false;
+      _searchQuery = barcode;
+    });
+    _showResultSnackBar('Barcode scanned: $barcode');
+  }
+
+  void _onVoiceResult(String text) {
+    setState(() {
+      _showVoiceInput = false;
+      _searchQuery = text;
+    });
+    _showResultSnackBar('Voice input: $text');
+  }
+
+  void _showResultSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Plus Jakarta Sans'),
+        ),
+        backgroundColor: AppColors.accent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Show Scan Barcode Screen
+    if (_showScanBarcode) {
+      return ScanBarcodeScreen(
+        onBarcodeScanned: _onBarcodeScanned,
+        onCancel: _closeScanBarcode,
+      );
+    }
+
+    // Show Voice Input Screen
+    if (_showVoiceInput) {
+      return VoiceInputScreen(
+        onVoiceResult: _onVoiceResult,
+        onCancel: _closeVoiceInput,
+      );
+    }
+
+    // Main Log Meal Screen
     return AppViewport(
       bottomNavigationBar: AppBottomNavigation(
         currentScreen: AppScreen.logMeal,
-        onTabSelected: onTabSelected,
+        onTabSelected: widget.onTabSelected,
       ),
       child: Column(
         children: [
-          _LogMealHero(onBackPressed: onBackPressed),
+          _LogMealHero(
+            onBackPressed: widget.onBackPressed,
+            onScanBarcode: _openScanBarcode,
+            onVoiceInput: _openVoiceInput,
+            searchQuery: _searchQuery,
+          ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -94,9 +182,17 @@ class LogMealScreen extends StatelessWidget {
 }
 
 class _LogMealHero extends StatelessWidget {
-  const _LogMealHero({required this.onBackPressed});
+  const _LogMealHero({
+    required this.onBackPressed,
+    required this.onScanBarcode,
+    required this.onVoiceInput,
+    this.searchQuery,
+  });
 
   final VoidCallback onBackPressed;
+  final VoidCallback onScanBarcode;
+  final VoidCallback onVoiceInput;
+  final String? searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -140,21 +236,23 @@ class _LogMealHero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const _SearchField(),
+          _SearchField(query: searchQuery),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: ActionPill(
                   assetPath: 'assets/figma/log/scan_icon',
                   label: 'Scan Barcode',
+                  onTap: onScanBarcode,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: ActionPill(
                   assetPath: 'assets/figma/log/voice_icon',
                   label: 'Voice Input',
+                  onTap: onVoiceInput,
                 ),
               ),
             ],
@@ -166,7 +264,9 @@ class _LogMealHero extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  const _SearchField({this.query});
+
+  final String? query;
 
   @override
   Widget build(BuildContext context) {
@@ -186,13 +286,16 @@ class _SearchField extends StatelessWidget {
             height: 20,
           ),
           const SizedBox(width: 12),
-          const Text(
-            'Search local dishes...',
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              query ?? 'Search local dishes...',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: query != null ? Colors.white : AppColors.textSecondary,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -206,8 +309,8 @@ class _ResultsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
+    return const Row(
+      children: [
         Expanded(
           child: Text(
             'VERIFIED LOCAL DISHES',
@@ -237,36 +340,45 @@ class _ResultsHeader extends StatelessWidget {
 }
 
 class ActionPill extends StatelessWidget {
-  const ActionPill({super.key, required this.assetPath, required this.label});
+  const ActionPill({
+    super.key,
+    required this.assetPath,
+    required this.label,
+    this.onTap,
+  });
 
   final String assetPath;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 45.26,
-      decoration: BoxDecoration(
-        color: AppColors.heroChip,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1AFFFFFF), width: 0.64),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(assetPath, width: 20, height: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-              color: Colors.white,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 45.26,
+        decoration: BoxDecoration(
+          color: AppColors.heroChip,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x1AFFFFFF), width: 0.64),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(assetPath, width: 20, height: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
