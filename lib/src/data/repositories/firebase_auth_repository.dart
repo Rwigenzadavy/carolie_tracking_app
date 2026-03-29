@@ -10,14 +10,11 @@ class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({
     FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
-    GoogleSignIn? googleSignIn,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-       _firestore = firestore ?? FirebaseFirestore.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn();
+       _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn;
 
   @override
   Future<void> signInWithEmailPassword({
@@ -52,19 +49,12 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
-      throw FirebaseAuthException(
-        code: 'sign_in_canceled',
-        message: 'Google sign-in was canceled.',
-      );
-    }
+    final googleUser = await GoogleSignIn.instance.authenticate();
 
-    final authentication = await googleUser.authentication;
+    final authentication = googleUser.authentication;
 
     final credential = GoogleAuthProvider.credential(
       idToken: authentication.idToken,
-      accessToken: authentication.accessToken,
     );
 
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
@@ -89,7 +79,7 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     await Future.wait([
       _firebaseAuth.signOut(),
-      _googleSignIn.signOut(),
+      GoogleSignIn.instance.signOut(),
     ]);
   }
 

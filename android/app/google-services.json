@@ -12,7 +12,20 @@
           "package_name": "com.example.carolie_tracking_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "34040325424-u42vgjs9t4s8ges3o6bsf1obg7bq8k1r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.carolie_tracking_app",
+            "certificate_hash": "4be4ce74ec2ee99ea49b9c4e57306561863d3fd3"
+          }
+        },
+        {
+          "client_id": "34040325424-kgn5q9sac993ekvcac3f4cl7q95437a8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDZ4fnGhyKvtmfFtjXf50S4rquwIjXt_NI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "34040325424-kgn5q9sac993ekvcac3f4cl7q95437a8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "34040325424-qp8beu7jjqhtb8ard5iaps065n8l5ni0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.carolieTrackingApp"
+              }
+            }
+          ]
         }
       }
     }

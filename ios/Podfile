@@ -31,6 +31,10 @@ target 'Runner' do
 
   pod 'CwlCatchExceptionSupport', :path => 'LocalPods/CwlCatchExceptionSupport'
   pod 'CwlCatchException', :path => 'LocalPods/CwlCatchException'
+  # The CocoaPods spec for GTMSessionFetcher 3.x points at Git tags that are no
+  # longer available upstream, so we vendor a local copy to keep pod install
+  # reproducible.
+  pod 'GTMSessionFetcher', :path => 'LocalPods/GTMSessionFetcher'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
