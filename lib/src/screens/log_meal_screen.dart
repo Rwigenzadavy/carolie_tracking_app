@@ -30,6 +30,7 @@ class _LogMealScreenState extends State<LogMealScreen> {
   bool _showVoiceInput = false;
 
   static const _dishes = [
+    // ── Nigerian dishes ───────────────────────────────────────────────────────
     (
       title: 'Jollof Rice',
       calories: 450,
@@ -69,6 +70,47 @@ class _LogMealScreenState extends State<LogMealScreen> {
       title: 'Chin Chin',
       calories: 140,
       portions: ['1 handful', '1 cup', '50g'],
+    ),
+    // ── Rwandan dishes ────────────────────────────────────────────────────────
+    (
+      title: 'Ugali (Akacuru)',
+      calories: 350,
+      portions: ['1 serving', '1/2 serving', '200g'],
+    ),
+    (
+      title: 'Isombe (Cassava Leaves)',
+      calories: 180,
+      portions: ['1 bowl', '1/2 bowl', '150g'],
+    ),
+    (
+      title: 'Brochettes (Inyama)',
+      calories: 260,
+      portions: ['5 skewers', '3 skewers', '100g'],
+    ),
+    (
+      title: 'Ibiharage (Beans)',
+      calories: 220,
+      portions: ['1 bowl', '1/2 bowl', '200g'],
+    ),
+    (
+      title: 'Ibijumba (Sweet Potato)',
+      calories: 150,
+      portions: ['1 medium', '2 medium', '200g'],
+    ),
+    (
+      title: 'Umutsima (Cassava & Corn)',
+      calories: 300,
+      portions: ['1 plate', '1/2 plate', '200g'],
+    ),
+    (
+      title: 'Agatogo (Vegetable Stew)',
+      calories: 200,
+      portions: ['1 bowl', '1/2 bowl', '200g'],
+    ),
+    (
+      title: 'Ibisuma (Sorghum Porridge)',
+      calories: 190,
+      portions: ['1 cup', '2 cups', '300ml'],
     ),
   ];
 

@@ -8,13 +8,15 @@ import 'package:provider/provider.dart';
 
 const _groups = [
   (emoji: '🇳🇬', name: 'Nigerian Wellness', members: '2.4k', color: Color(0xFFFFF3E0)),
-  (emoji: '🥗', name: 'Fitness & Nutrition', members: '1.8k', color: Color(0xFFE8F5E9)),
-  (emoji: '🧘', name: 'Mindful Eating', members: '3.1k', color: Color(0xFFE3F2FD)),
-  (emoji: '🏃', name: 'Active Lifestyle', members: '980', color: Color(0xFFF3E5F5)),
+  (emoji: '🇷🇼', name: 'Rwanda Wellness', members: '1.2k', color: Color(0xFFE8F5E9)),
+  (emoji: '🥗', name: 'Fitness & Nutrition', members: '1.8k', color: Color(0xFFE3F2FD)),
+  (emoji: '🧘', name: 'Mindful Eating', members: '3.1k', color: Color(0xFFF3E5F5)),
+  (emoji: '🏃', name: 'Active Lifestyle', members: '980', color: Color(0xFFFFF9C4)),
 ];
 
 const _tags = [
   'Nigerian Wellness',
+  'Rwanda Wellness',
   'Fitness & Nutrition',
   'Mindful Eating',
   'Active Lifestyle',
@@ -443,9 +445,10 @@ class _PostCard extends StatelessWidget {
 
   static const _tagColors = {
     'Nigerian Wellness': (bg: Color(0xFFFFF3E0), text: Color(0xFFE65100)),
-    'Fitness & Nutrition': (bg: Color(0xFFE8F5E9), text: Color(0xFF2E7D32)),
-    'Mindful Eating': (bg: Color(0xFFE3F2FD), text: Color(0xFF1565C0)),
-    'Active Lifestyle': (bg: Color(0xFFF3E5F5), text: Color(0xFF6A1B9A)),
+    'Rwanda Wellness': (bg: Color(0xFFE8F5E9), text: Color(0xFF1B5E20)),
+    'Fitness & Nutrition': (bg: Color(0xFFE3F2FD), text: Color(0xFF1565C0)),
+    'Mindful Eating': (bg: Color(0xFFF3E5F5), text: Color(0xFF6A1B9A)),
+    'Active Lifestyle': (bg: Color(0xFFFFF9C4), text: Color(0xFFF57F17)),
   };
 
   @override

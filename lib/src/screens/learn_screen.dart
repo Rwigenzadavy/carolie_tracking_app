@@ -61,6 +61,28 @@ class LearnScreen extends StatelessWidget {
                       readTime: '6 min read',
                       onTap: () => _openLesson(context, LessonData.jollofRice),
                     ),
+                    const SizedBox(height: 12),
+                    _LessonCard(
+                      emoji: '🌿',
+                      iconBg: const Color(0xFFE8F5E9),
+                      category: 'Rwandan Cuisine',
+                      title: 'Isombe — The Leafy Powerhouse',
+                      description:
+                          'Rwanda\'s beloved cassava-leaf dish is packed with protein and iron',
+                      readTime: '5 min read',
+                      onTap: () => _openLesson(context, LessonData.isombe),
+                    ),
+                    const SizedBox(height: 12),
+                    _LessonCard(
+                      emoji: '🥩',
+                      iconBg: const Color(0xFFFFF3E0),
+                      category: 'Rwandan Cuisine',
+                      title: 'Brochettes — Smart Grilling',
+                      description:
+                          'How Rwanda\'s favourite street food can fit a balanced diet',
+                      readTime: '4 min read',
+                      onTap: () => _openLesson(context, LessonData.brochettes),
+                    ),
                     const SizedBox(height: 30),
 
                     // ── Ingredient Spotlight ──────────────────────────────
@@ -92,10 +114,42 @@ class LearnScreen extends StatelessWidget {
                         SizedBox(width: 12),
                         Expanded(
                           child: _SeasonalCard(
+                            emoji: '🍠',
+                            name: 'Sweet Potato',
+                            status: 'Peak season 🇷🇼',
+                            bg: Color(0xFFFFF9C4),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _SeasonalCard(
+                            emoji: '🌿',
+                            name: 'Cassava Leaves',
+                            status: 'Available now 🇷🇼',
+                            bg: Color(0xFFF0FDF4),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _SeasonalCard(
                             emoji: '🍆',
                             name: 'Garden Eggs',
-                            status: 'Peak season',
+                            status: 'Peak season 🇳🇬',
                             bg: Color(0xFFF0F9FF),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _SeasonalCard(
+                            emoji: '🫘',
+                            name: 'Ibiharage',
+                            status: 'Harvest time 🇷🇼',
+                            bg: Color(0xFFE8F5E9),
                           ),
                         ),
                         SizedBox(width: 12),
@@ -104,7 +158,7 @@ class LearnScreen extends StatelessWidget {
                             emoji: '🥥',
                             name: 'Coconuts',
                             status: 'Available now',
-                            bg: Color(0xFFF0FDF4),
+                            bg: Color(0xFFFCE4EC),
                           ),
                         ),
                       ],

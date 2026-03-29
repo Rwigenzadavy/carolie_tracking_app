@@ -183,7 +183,7 @@ class LessonData {
       LessonSection(
         heading: 'Proteins — The Body\'s Building Blocks',
         body:
-            'Proteins repair and build muscle, produce enzymes and hormones, and support immune health. Great local sources include beans, moi moi, fish, eggs, and lean meat. Target 0.8–1.2 g of protein per kilogram of body weight daily.',
+            'Proteins repair and build muscle, produce enzymes and hormones, and support immune health. Great local sources include beans, moi moi, isombe (cassava leaves), ibiharage, fish, eggs, and lean meat like brochettes. Target 0.8–1.2 g of protein per kilogram of body weight daily.',
       ),
       LessonSection(
         heading: 'Fats — Essential, Not the Enemy',
@@ -230,6 +230,78 @@ class LessonData {
         heading: 'How to Use Them',
         body:
             'Eat them dried as a snack, soak overnight for a softer texture, blend into kunu aya milk as a dairy-free drink, or grind into flour for baking. Tiger nut flour is also an excellent gluten-free thickener for soups and stews.',
+      ),
+    ],
+  );
+
+  static final isombe = LessonArgs(
+    emoji: '🌿',
+    category: 'Rwandan Cuisine',
+    title: 'Isombe — The Leafy Powerhouse',
+    description:
+        'Rwanda\'s beloved cassava-leaf dish is packed with protein and iron',
+    readTime: '5 min read',
+    content: const [
+      LessonSection(
+        heading: 'What Is Isombe?',
+        body:
+            'Isombe is a traditional Rwandan dish made from pounded cassava leaves slow-cooked with onions, tomatoes, and palm oil, often enriched with dried fish or groundnut paste. It is a staple across Rwanda and the Great Lakes region, beloved for its earthy depth of flavour.',
+      ),
+      LessonSection(
+        heading: 'Remarkable Nutritional Profile',
+        body:
+            'Cassava leaves are nutritional powerhouses: a 100 g cooked serving delivers up to 7 g of protein — unusually high for a leafy vegetable — alongside iron, zinc, calcium, and vitamins B1 and B2. The cooking process neutralises naturally occurring cyanogenic compounds, making the leaves safe and highly digestible.',
+      ),
+      LessonSection(
+        heading: 'Iron and Anaemia Prevention',
+        body:
+            'Isombe is one of East Africa\'s richest plant-based iron sources. Pairing it with a vitamin-C-rich side (tomatoes, lemon juice, or fresh peppers) significantly boosts non-haem iron absorption — an important strategy for women and adolescents at risk of iron-deficiency anaemia.',
+      ),
+      LessonSection(
+        heading: 'Making It Lighter',
+        body:
+            'Traditional recipes can use generous palm oil. Reducing palm oil to 1–2 tablespoons per pot saves 400–500 calories while preserving flavour. Substituting dried fish with grilled tilapia or beans adds protein with less sodium and saturated fat.',
+      ),
+      LessonSection(
+        heading: 'Serving Suggestions',
+        body:
+            'Serve isombe over ugali (akacuru), steamed sweet potatoes, or brown rice for a complete meal. A single bowl of isombe with ugali covers roughly 30 % of your daily protein needs, 40 % of iron, and 50 % of folate — all from whole, locally available ingredients.',
+      ),
+    ],
+  );
+
+  static final brochettes = LessonArgs(
+    emoji: '🥩',
+    category: 'Rwandan Cuisine',
+    title: 'Brochettes — Smart Grilling',
+    description:
+        'How Rwanda\'s favourite street food can fit a balanced diet',
+    readTime: '4 min read',
+    content: const [
+      LessonSection(
+        heading: 'What Are Brochettes?',
+        body:
+            'Brochettes (inyama y\'inka or inyama y\'ihene) are Rwanda\'s iconic grilled meat skewers — beef, goat, or pork marinated in a simple spice blend, then charcoal-grilled and served with fried plantain or roasted potatoes. They are a weekend staple and the centrepiece of social gatherings.',
+      ),
+      LessonSection(
+        heading: 'Protein-Rich and Mineral-Dense',
+        body:
+            'A 5-skewer serving of lean beef brochettes provides approximately 30 g of protein, 12 mg of zinc, and good amounts of B12 and heme iron. Goat brochettes are slightly leaner and equally nutrient-dense, making them excellent post-workout or recovery meals.',
+      ),
+      LessonSection(
+        heading: 'Choose Leaner Cuts',
+        body:
+            'Request cuts from the round, loin, or leg — they are naturally leaner than ribs or shoulder. Trimming visible fat before marinating reduces saturated fat by up to 40 % without changing the grilled flavour. Ask the vendor to go easy on the oil baste.',
+      ),
+      LessonSection(
+        heading: 'Watch the Sides',
+        body:
+            'The biggest calorie culprits are deep-fried potatoes and excess chilli sauce. Swap fries for roasted sweet potato (ibijumba) or a fresh tomato-and-onion salad (saladi). This cuts the meal\'s total calories from ~700 to under 450 while boosting fibre and vitamins.',
+      ),
+      LessonSection(
+        heading: 'Balanced Plate Strategy',
+        body:
+            'Aim for 3 skewers (one serving of protein) alongside a generous vegetable salad and a small portion of starchy side. This keeps the meal within 400–500 calories while delivering excellent protein and micronutrients — making brochettes a nutritious, culturally rich choice.',
       ),
     ],
   );
