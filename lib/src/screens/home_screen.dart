@@ -1,7 +1,13 @@
+import 'package:carolie_tracking_app/src/domain/entities/meal_log.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/auth_controller.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/meal_log_controller.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/preferences_controller.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
+import 'package:carolie_tracking_app/src/widgets/meal_log_editor_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -13,23 +19,17 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onLogMealPressed;
   final ValueChanged<AppScreen> onTabSelected;
 
-  static const _meals = [
-    (
-      imagePath: 'assets/figma/home/millet_image',
-      title: 'Millet Porridge',
-      subtitle: 'Breakfast • 08:30 AM',
-      calories: '320 cal',
-    ),
-    (
-      imagePath: 'assets/figma/home/jollof_image',
-      title: 'Jollof Rice & Plantain',
-      subtitle: 'Lunch • 01:15 PM',
-      calories: '650 cal',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final authController = context.watch<AuthController>();
+    final mealLogController = context.watch<MealLogController>();
+    final prefsController = context.watch<PreferencesController>();
+    final user = authController.currentUser;
+    final totalCalories = mealLogController.totalCalories;
+    final calorieGoal = prefsController.calorieGoal;
+    final caloriesLeft = (calorieGoal - totalCalories).clamp(0, calorieGoal);
+    final progress = (totalCalories / calorieGoal).clamp(0.0, 1.0);
+
     return AppViewport(
       bottomNavigationBar: AppBottomNavigation(
         currentScreen: AppScreen.home,
@@ -38,7 +38,15 @@ class HomeScreen extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _HomeHero(onLogMealPressed: onLogMealPressed),
+          _HomeHero(
+            displayName: _firstName(user?.displayName),
+            totalCalories: totalCalories,
+            caloriesLeft: caloriesLeft,
+            calorieGoal: calorieGoal,
+            progress: progress,
+            onLogMealPressed: onLogMealPressed,
+            onSettingsPressed: () => _openSettings(context),
+          ),
           Container(
             color: Colors.white,
             child: Column(
@@ -80,20 +88,27 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ..._meals.expand(
-                  (meal) => [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                if (mealLogController.isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (mealLogController.mealLogs.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: _EmptyMealsState(),
+                  )
+                else
+                  ...mealLogController.mealLogs.map(
+                    (mealLog) => Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                       child: MealEntryCard(
-                        imagePath: meal.imagePath,
-                        title: meal.title,
-                        subtitle: meal.subtitle,
-                        calories: meal.calories,
+                        mealLog: mealLog,
+                        onEditPressed: () => _editMeal(context, mealLog),
+                        onDeletePressed: () => _deleteMeal(context, mealLog),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
+                  ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -102,12 +117,286 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _openSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _SettingsSheet(),
+    );
+  }
+
+  Future<void> _editMeal(BuildContext context, MealLog mealLog) async {
+    final result = await showMealLogEditorSheet(context, mealLog: mealLog);
+    if (result == null || !context.mounted) return;
+
+    await context.read<MealLogController>().updateMealLog(
+          mealLog.copyWith(
+            mealName: result.mealName,
+            calories: result.calories,
+            mealType: result.mealType,
+            portion: result.portion,
+            source: result.source,
+          ),
+        );
+
+    if (!context.mounted) return;
+    _showSnackBar(context, 'Meal updated');
+  }
+
+  Future<void> _deleteMeal(BuildContext context, MealLog mealLog) async {
+    await context.read<MealLogController>().deleteMealLog(mealLog);
+    if (!context.mounted) return;
+    _showSnackBar(context, 'Meal deleted');
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  static String _firstName(String? displayName) {
+    final cleaned = (displayName ?? 'there').trim();
+    if (cleaned.isEmpty) return 'there';
+    return cleaned.split(' ').first;
+  }
 }
 
-class _HomeHero extends StatelessWidget {
-  const _HomeHero({required this.onLogMealPressed});
+// ── Settings Sheet ─────────────────────────────────────────────────────────────
 
+class _SettingsSheet extends StatefulWidget {
+  const _SettingsSheet();
+
+  @override
+  State<_SettingsSheet> createState() => _SettingsSheetState();
+}
+
+class _SettingsSheetState extends State<_SettingsSheet> {
+  late TextEditingController _calorieGoalController;
+  late String _selectedMealType;
+  late bool _isDarkMode;
+
+  static const _mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = context.read<PreferencesController>();
+    _calorieGoalController =
+        TextEditingController(text: prefs.calorieGoal.toString());
+    _selectedMealType = prefs.defaultMealType;
+    _isDarkMode = prefs.isDarkMode;
+  }
+
+  @override
+  void dispose() {
+    _calorieGoalController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final prefs = context.read<PreferencesController>();
+    final goal = int.tryParse(_calorieGoalController.text.trim());
+    if (goal != null && goal > 0) {
+      await prefs.setCalorieGoal(goal);
+    }
+    await prefs.setDefaultMealType(_selectedMealType);
+    await prefs.setIsDarkMode(_isDarkMode);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Settings',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Calorie goal
+          const Text(
+            'Daily Calorie Goal',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _calorieGoalController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: '2100',
+              suffixText: 'kcal',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Default meal type
+          const Text(
+            'Default Meal Type',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _selectedMealType, // ignore: deprecated_member_use
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+            items: _mealTypes
+                .map((type) =>
+                    DropdownMenuItem(value: type, child: Text(type)))
+                .toList(),
+            onChanged: (value) {
+              if (value != null) setState(() => _selectedMealType = value);
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Dark mode
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Dark Mode',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Switch(
+                value: _isDarkMode,
+                activeThumbColor: AppColors.accent,
+                onChanged: (value) => setState(() => _isDarkMode = value),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Save button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Save Preferences',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Sign out
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await context.read<AuthController>().signOut();
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.divider),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Sign Out',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hero ───────────────────────────────────────────────────────────────────────
+
+class _HomeHero extends StatelessWidget {
+  const _HomeHero({
+    required this.displayName,
+    required this.totalCalories,
+    required this.caloriesLeft,
+    required this.calorieGoal,
+    required this.progress,
+    required this.onLogMealPressed,
+    required this.onSettingsPressed,
+  });
+
+  final String displayName;
+  final int totalCalories;
+  final num caloriesLeft;
+  final int calorieGoal;
+  final double progress;
   final VoidCallback onLogMealPressed;
+  final VoidCallback onSettingsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -127,10 +416,10 @@ class _HomeHero extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'MONDAY, OCT 24',
-                      style: TextStyle(
+                      _todayLabel(),
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -139,10 +428,10 @@ class _HomeHero extends StatelessWidget {
                         color: Color(0xB3FFFFFF),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      'Hello, Dominion',
-                      style: TextStyle(
+                      'Hello, $displayName',
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -158,9 +447,13 @@ class _HomeHero extends StatelessWidget {
                 iconSize: 20,
               ),
               const SizedBox(width: 10),
-              const _HeroActionIcon(
-                assetPath: 'assets/figma/home/profile_icon',
-                iconSize: 24,
+              InkWell(
+                onTap: onSettingsPressed,
+                borderRadius: BorderRadius.circular(20),
+                child: const _HeroActionIcon(
+                  assetPath: 'assets/figma/home/profile_icon',
+                  iconSize: 24,
+                ),
               ),
             ],
           ),
@@ -177,12 +470,12 @@ class _HomeHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           RichText(
-            text: const TextSpan(
-              style: TextStyle(fontFamily: 'Plus Jakarta Sans'),
+            text: TextSpan(
+              style: const TextStyle(fontFamily: 'Plus Jakarta Sans'),
               children: [
                 TextSpan(
-                  text: '840',
-                  style: TextStyle(
+                  text: '$caloriesLeft',
+                  style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w700,
                     height: 1.5,
@@ -191,8 +484,8 @@ class _HomeHero extends StatelessWidget {
                   ),
                 ),
                 TextSpan(
-                  text: ' / 2,100 kcal',
-                  style: TextStyle(
+                  text: ' / $calorieGoal kcal',
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     height: 1.5,
@@ -203,20 +496,26 @@ class _HomeHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const _HeroProgress(value: 0.40),
+          _HeroProgress(value: progress),
           const SizedBox(height: 20),
-          const Row(
+          Row(
             children: [
               Expanded(
-                child: MacroCard(value: '124g', label: 'Carbs'),
+                child: MacroCard(
+                    value: '${(totalCalories * 0.45).round()}g',
+                    label: 'Carbs'),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
-                child: MacroCard(value: '65g', label: 'Protein'),
+                child: MacroCard(
+                    value: '${(totalCalories * 0.25).round()}g',
+                    label: 'Protein'),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
-                child: MacroCard(value: '42g', label: 'Fat'),
+                child: MacroCard(
+                    value: '${(totalCalories * 0.15).round()}g',
+                    label: 'Fat'),
               ),
             ],
           ),
@@ -262,7 +561,22 @@ class _HomeHero extends StatelessWidget {
       ),
     );
   }
+
+  static String _todayLabel() {
+    const weekdays = [
+      'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY',
+      'FRIDAY', 'SATURDAY', 'SUNDAY',
+    ];
+    const months = [
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    ];
+    final now = DateTime.now();
+    return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+  }
 }
+
+// ── Insight Card ───────────────────────────────────────────────────────────────
 
 class InsightCard extends StatelessWidget {
   const InsightCard({super.key});
@@ -319,19 +633,19 @@ class InsightCard extends StatelessWidget {
   }
 }
 
+// ── Meal Entry Card ────────────────────────────────────────────────────────────
+
 class MealEntryCard extends StatelessWidget {
   const MealEntryCard({
     super.key,
-    required this.imagePath,
-    required this.title,
-    required this.subtitle,
-    required this.calories,
+    required this.mealLog,
+    required this.onEditPressed,
+    required this.onDeletePressed,
   });
 
-  final String imagePath;
-  final String title;
-  final String subtitle;
-  final String calories;
+  final MealLog mealLog;
+  final VoidCallback onEditPressed;
+  final VoidCallback onDeletePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +662,7 @@ class MealEntryCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              imagePath,
+              'assets/figma/home/jollof_image',
               width: 60,
               height: 60,
               fit: BoxFit.cover,
@@ -365,7 +679,7 @@ class MealEntryCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title,
+                        mealLog.mealName,
                         style: const TextStyle(
                           fontFamily: 'Plus Jakarta Sans',
                           fontSize: 15,
@@ -377,7 +691,7 @@ class MealEntryCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      calories,
+                      '${mealLog.calories} cal',
                       style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 13,
@@ -390,7 +704,7 @@ class MealEntryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  '${mealLog.mealType} • ${mealLog.portion} • ${_formatTime(mealLog.loggedAt)}',
                   style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 12,
@@ -402,11 +716,74 @@ class MealEntryCard extends StatelessWidget {
               ],
             ),
           ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit') {
+                onEditPressed();
+              } else {
+                onDeletePressed();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'edit', child: Text('Edit')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatTime(DateTime value) {
+    final hour =
+        value.hour == 0 ? 12 : (value.hour > 12 ? value.hour - 12 : value.hour);
+    final minute = value.minute.toString().padLeft(2, '0');
+    final suffix = value.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $suffix';
+  }
+}
+
+// ── Empty State ────────────────────────────────────────────────────────────────
+
+class _EmptyMealsState extends StatelessWidget {
+  const _EmptyMealsState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'No meals logged yet',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Use the Log Meal button to create your first Firestore-backed meal entry.',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+// ── Macro Card ─────────────────────────────────────────────────────────────────
 
 class MacroCard extends StatelessWidget {
   const MacroCard({super.key, required this.value, required this.label});
@@ -452,6 +829,8 @@ class MacroCard extends StatelessWidget {
   }
 }
 
+// ── Hero Action Icon ───────────────────────────────────────────────────────────
+
 class _HeroActionIcon extends StatelessWidget {
   const _HeroActionIcon({required this.assetPath, required this.iconSize});
 
@@ -474,6 +853,8 @@ class _HeroActionIcon extends StatelessWidget {
     );
   }
 }
+
+// ── Hero Progress ──────────────────────────────────────────────────────────────
 
 class _HeroProgress extends StatelessWidget {
   const _HeroProgress({required this.value});

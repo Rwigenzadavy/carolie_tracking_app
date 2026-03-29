@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "34040325424",
+    "project_id": "carolie-app",
+    "storage_bucket": "carolie-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34040325424:android:00e3dae98e68ea549b94f5",
+        "android_client_info": {
+          "package_name": "com.example.carolie_tracking_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ4fnGhyKvtmfFtjXf50S4rquwIjXt_NI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

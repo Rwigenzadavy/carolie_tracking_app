@@ -1,76 +1,24 @@
+import 'package:carolie_tracking_app/src/domain/entities/community_post.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/auth_controller.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/community_post_controller.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
-
-//Data
+import 'package:provider/provider.dart';
 
 const _groups = [
-  (
-    emoji: '🇳🇬',
-    name: 'Nigerian Wellness',
-    members: '2.4k',
-    color: Color(0xFFFFF3E0),
-  ),
-  (
-    emoji: '🥗',
-    name: 'Fitness & Nutrition',
-    members: '1.8k',
-    color: Color(0xFFE8F5E9),
-  ),
-  (
-    emoji: '🧘',
-    name: 'Mindful Eating',
-    members: '3.1k',
-    color: Color(0xFFE3F2FD),
-  ),
-  (
-    emoji: '🏃',
-    name: 'Active Lifestyle',
-    members: '980',
-    color: Color(0xFFF3E5F5),
-  ),
+  (emoji: '🇳🇬', name: 'Nigerian Wellness', members: '2.4k', color: Color(0xFFFFF3E0)),
+  (emoji: '🥗', name: 'Fitness & Nutrition', members: '1.8k', color: Color(0xFFE8F5E9)),
+  (emoji: '🧘', name: 'Mindful Eating', members: '3.1k', color: Color(0xFFE3F2FD)),
+  (emoji: '🏃', name: 'Active Lifestyle', members: '980', color: Color(0xFFF3E5F5)),
 ];
 
-const _posts = [
-  (
-    avatar: '🧑🏾',
-    username: 'Amara O.',
-    time: '2 hours ago',
-    tag: 'Nigerian Wellness',
-    tagColor: Color(0xFFFFF3E0),
-    tagTextColor: Color(0xFFE65100),
-    body:
-        'Just made a healthy version of Egusi soup with less palm oil 🥬 Feeling great about hitting my protein goals today! Who else is on this journey? 💪',
-    likes: 48,
-    comments: 12,
-  ),
-  (
-    avatar: '👩🏽',
-    username: 'Chisom B.',
-    time: '5 hours ago',
-    tag: 'Fitness & Nutrition',
-    tagColor: Color(0xFFE8F5E9),
-    tagTextColor: Color(0xFF2E7D32),
-    body:
-        'Swapped white rice for ofada rice this week and my energy levels are so much better 🌾 Small changes, big results! Anyone tried fonio yet?',
-    likes: 73,
-    comments: 21,
-  ),
-  (
-    avatar: '🧔🏿',
-    username: 'Emeka T.',
-    time: 'Yesterday',
-    tag: 'Active Lifestyle',
-    tagColor: Color(0xFFF3E5F5),
-    tagTextColor: Color(0xFF6A1B9A),
-    body:
-        'Morning run done ✅ Fueled by akara and zobo 😄 Tracking my meals on this app has been a game changer. Highly recommend logging everything!',
-    likes: 31,
-    comments: 8,
-  ),
+const _tags = [
+  'Nigerian Wellness',
+  'Fitness & Nutrition',
+  'Mindful Eating',
+  'Active Lifestyle',
 ];
-
-//Screen
 
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({super.key, required this.onTabSelected});
@@ -91,6 +39,8 @@ class CommunityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final communityController = context.watch<CommunityPostController>();
+
     return AppViewport(
       bottomNavigationBar: AppBottomNavigation(
         currentScreen: AppScreen.tribe,
@@ -98,7 +48,6 @@ class CommunityScreen extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Main content
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,8 +57,6 @@ class CommunityScreen extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   children: [
                     const SizedBox(height: 24),
-
-                    // YOUR GROUPS label
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
@@ -124,15 +71,13 @@ class CommunityScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // Horizontal groups carousel
                     SizedBox(
                       height: 130,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         itemCount: _groups.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        separatorBuilder: (context, index) => const SizedBox(width: 12),
                         itemBuilder: (context, index) {
                           final g = _groups[index];
                           return _GroupCard(
@@ -144,10 +89,7 @@ class CommunityScreen extends StatelessWidget {
                         },
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // COMMUNITY FEED label
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
@@ -162,34 +104,29 @@ class CommunityScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // Vertical list of post cards
-                    ..._posts.map(
-                      (p) => Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                        child: _PostCard(
-                          avatar: p.avatar,
-                          username: p.username,
-                          time: p.time,
-                          tag: p.tag,
-                          tagColor: p.tagColor,
-                          tagTextColor: p.tagTextColor,
-                          body: p.body,
-                          likes: p.likes,
-                          comments: p.comments,
+                    if (communityController.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (communityController.posts.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: _EmptyPostsState(),
+                      )
+                    else
+                      ...communityController.posts.map(
+                        (post) => Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: _PostCard(post: post),
                         ),
                       ),
-                    ),
-
-                    // Extra space so FAB doesn't cover the last post
                     const SizedBox(height: 80),
                   ],
                 ),
               ),
             ],
           ),
-
-          // ── Floating + button
           Positioned(
             bottom: 16,
             right: 16,
@@ -206,7 +143,7 @@ class CommunityScreen extends StatelessWidget {
   }
 }
 
-//New Post Bottom Sheet
+// ── New Post Sheet ─────────────────────────────────────────────────────────────
 
 class _NewPostSheet extends StatefulWidget {
   const _NewPostSheet();
@@ -217,11 +154,49 @@ class _NewPostSheet extends StatefulWidget {
 
 class _NewPostSheetState extends State<_NewPostSheet> {
   final _controller = TextEditingController();
+  String _selectedTag = _tags.first;
+  bool _isPosting = false;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _post() async {
+    final body = _controller.text.trim();
+    if (body.isEmpty) return;
+
+    final authController = context.read<AuthController>();
+    final communityController = context.read<CommunityPostController>();
+    final user = authController.currentUser;
+    if (user == null) return;
+
+    setState(() => _isPosting = true);
+
+    try {
+      await communityController.addPost(
+        userId: user.id,
+        username: user.displayName.isNotEmpty ? user.displayName : 'Anonymous',
+        avatar: _avatarFor(user.displayName),
+        body: body,
+        tag: _selectedTag,
+      );
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to post. Please try again.')),
+        );
+        setState(() => _isPosting = false);
+      }
+    }
+  }
+
+  static String _avatarFor(String name) {
+    const avatars = ['🧑🏾', '👩🏽', '🧔🏿', '👨🏻', '👩🏼', '🧑🏿'];
+    if (name.isEmpty) return avatars.first;
+    return avatars[name.codeUnitAt(0) % avatars.length];
   }
 
   @override
@@ -234,7 +209,6 @@ class _NewPostSheetState extends State<_NewPostSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
           Center(
             child: Container(
               width: 40,
@@ -246,7 +220,6 @@ class _NewPostSheetState extends State<_NewPostSheet> {
             ),
           ),
           const SizedBox(height: 16),
-
           const Text(
             'Share with the community',
             style: TextStyle(
@@ -256,9 +229,20 @@ class _NewPostSheetState extends State<_NewPostSheet> {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Text input
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _selectedTag, // ignore: deprecated_member_use
+            decoration: InputDecoration(
+              labelText: 'Group',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            items: _tags
+                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                .toList(),
+            onChanged: (v) { if (v != null) setState(() => _selectedTag = v); },
+          ),
+          const SizedBox(height: 12),
           TextField(
             controller: _controller,
             maxLines: 4,
@@ -285,28 +269,33 @@ class _NewPostSheetState extends State<_NewPostSheet> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Post button
           SizedBox(
             width: double.infinity,
             height: 48,
             child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _isPosting ? null : _post,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              child: const Text(
-                'Post',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
+              child: _isPosting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      'Post',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -315,7 +304,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
   }
 }
 
-//Header
+// ── Header ────────────────────────────────────────────────────────────────────
 
 class _CommunityHeader extends StatelessWidget {
   @override
@@ -352,7 +341,8 @@ class _CommunityHeader extends StatelessWidget {
   }
 }
 
-//Group Card
+// ── Group Card ────────────────────────────────────────────────────────────────
+
 class _GroupCard extends StatelessWidget {
   const _GroupCard({
     required this.emoji,
@@ -414,33 +404,24 @@ class _GroupCard extends StatelessWidget {
   }
 }
 
-//Post Card
+// ── Post Card ─────────────────────────────────────────────────────────────────
 
 class _PostCard extends StatelessWidget {
-  const _PostCard({
-    required this.avatar,
-    required this.username,
-    required this.time,
-    required this.tag,
-    required this.tagColor,
-    required this.tagTextColor,
-    required this.body,
-    required this.likes,
-    required this.comments,
-  });
+  const _PostCard({required this.post});
+  final CommunityPost post;
 
-  final String avatar;
-  final String username;
-  final String time;
-  final String tag;
-  final Color tagColor;
-  final Color tagTextColor;
-  final String body;
-  final int likes;
-  final int comments;
+  static const _tagColors = {
+    'Nigerian Wellness': (bg: Color(0xFFFFF3E0), text: Color(0xFFE65100)),
+    'Fitness & Nutrition': (bg: Color(0xFFE8F5E9), text: Color(0xFF2E7D32)),
+    'Mindful Eating': (bg: Color(0xFFE3F2FD), text: Color(0xFF1565C0)),
+    'Active Lifestyle': (bg: Color(0xFFF3E5F5), text: Color(0xFF6A1B9A)),
+  };
 
   @override
   Widget build(BuildContext context) {
+    final tagStyle = _tagColors[post.tag] ??
+        (bg: const Color(0xFFF5F5F5), text: AppColors.textSecondary);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -458,7 +439,6 @@ class _PostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: avatar + name + time + tag
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -470,7 +450,8 @@ class _PostCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(avatar, style: const TextStyle(fontSize: 20)),
+                  child: Text(post.avatar,
+                      style: const TextStyle(fontSize: 20)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -479,7 +460,7 @@ class _PostCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      username,
+                      post.username,
                       style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 14,
@@ -489,7 +470,7 @@ class _PostCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      time,
+                      _timeAgo(post.createdAt),
                       style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 11,
@@ -500,29 +481,27 @@ class _PostCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: tagColor,
+                  color: tagStyle.bg,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  tag,
+                  post.tag,
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: tagTextColor,
+                    color: tagStyle.text,
                   ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
-          // Body text
           Text(
-            body,
+            post.body,
             style: const TextStyle(
               fontFamily: 'Plus Jakarta Sans',
               fontSize: 13,
@@ -531,15 +510,10 @@ class _PostCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-
           const SizedBox(height: 14),
-
-          // Engagement row
           Row(
             children: [
-              _EngagementButton(icon: '❤️', count: likes),
-              const SizedBox(width: 20),
-              _EngagementButton(icon: '💬', count: comments),
+              _EngagementButton(icon: '❤️', count: post.likes),
               const SizedBox(width: 20),
               const _EngagementButton(icon: '🔗', count: null),
             ],
@@ -548,12 +522,21 @@ class _PostCard extends StatelessWidget {
       ),
     );
   }
+
+  static String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays == 1) return 'Yesterday';
+    return '${diff.inDays}d ago';
+  }
 }
 
-//Engagement Button
+// ── Engagement Button ─────────────────────────────────────────────────────────
+
 class _EngagementButton extends StatelessWidget {
   const _EngagementButton({required this.icon, required this.count});
-
   final String icon;
   final int? count;
 
@@ -575,6 +558,49 @@ class _EngagementButton extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+// ── Empty Posts State ─────────────────────────────────────────────────────────
+
+class _EmptyPostsState extends StatelessWidget {
+  const _EmptyPostsState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: const Column(
+        children: [
+          Text('🌍', style: TextStyle(fontSize: 36)),
+          SizedBox(height: 12),
+          Text(
+            'No posts yet',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Be the first to share something with your wellness tribe!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

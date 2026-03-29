@@ -81,8 +81,10 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
       onResult: _onSpeechResult,
       listenFor: const Duration(seconds: 30),
       pauseFor: const Duration(seconds: 3),
-      partialResults: true,
       localeId: 'en_US',
+      listenOptions: stt.SpeechListenOptions(
+        partialResults: true,
+      ),
     );
   }
 

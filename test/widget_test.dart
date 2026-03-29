@@ -29,11 +29,12 @@ void main() {
         home: Scaffold(
           body: ListView(
             padding: const EdgeInsets.all(16),
-            children: const [
+            children: [
               DishCard(
                 title: 'Jollof Rice',
-                subtitle: '~450 cal per serving',
+                calories: 450,
                 portions: ['1 plate', '1/2 plate', '1 cup'],
+                onLogPressed: (_) {},
               ),
             ],
           ),

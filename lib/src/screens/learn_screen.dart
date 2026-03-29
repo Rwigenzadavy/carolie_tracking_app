@@ -1,3 +1,4 @@
+import 'package:carolie_tracking_app/src/screens/lesson_detail_screen.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
@@ -28,34 +29,37 @@ class LearnScreen extends StatelessWidget {
                     // ── Featured Lessons ──────────────────────────────────
                     const _SectionLabel('FEATURED LESSONS'),
                     const SizedBox(height: 16),
-                    const _LessonCard(
+                    _LessonCard(
                       emoji: '📚',
-                      iconBg: Color(0xFFFFF4EC),
+                      iconBg: const Color(0xFFFFF4EC),
                       category: 'Nutrition Basics',
                       title: 'Understanding Macronutrients',
                       description:
                           'Learn how carbs, proteins, and fats work in your body',
                       readTime: '5 min read',
+                      onTap: () => _openLesson(context, LessonData.macronutrients),
                     ),
                     const SizedBox(height: 12),
-                    const _LessonCard(
+                    _LessonCard(
                       emoji: '🌰',
-                      iconBg: Color(0xFFF0F9FF),
+                      iconBg: const Color(0xFFF0F9FF),
                       category: 'Local Ingredients',
                       title: 'Power of Tiger Nuts',
                       description:
                           'Discover the health benefits of this ancient African superfood',
                       readTime: '4 min read',
+                      onTap: () => _openLesson(context, LessonData.tigerNuts),
                     ),
                     const SizedBox(height: 12),
-                    const _LessonCard(
+                    _LessonCard(
                       emoji: '🍚',
-                      iconBg: Color(0xFFFEF3F2),
+                      iconBg: const Color(0xFFFEF3F2),
                       category: 'Cooking Tips',
                       title: 'Healthier Jollof Rice',
                       description:
-                          'Enjoy your favorite dish with better nutrition balance',
+                          'Enjoy your favourite dish with better nutrition balance',
                       readTime: '6 min read',
+                      onTap: () => _openLesson(context, LessonData.jollofRice),
                     ),
                     const SizedBox(height: 30),
 
@@ -112,6 +116,21 @@ class LearnScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openLesson(BuildContext context, LessonArgs lesson) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LessonDetailScreen(
+          emoji: lesson.emoji,
+          category: lesson.category,
+          title: lesson.title,
+          description: lesson.description,
+          readTime: lesson.readTime,
+          content: lesson.content,
+        ),
       ),
     );
   }
@@ -219,6 +238,7 @@ class _LessonCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.readTime,
+    required this.onTap,
   });
 
   final String emoji;
@@ -227,90 +247,92 @@ class _LessonCard extends StatelessWidget {
   final String title;
   final String description;
   final String readTime;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEEEEEE), width: 0.64),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: RichText(
-              text: TextSpan(
-                text: emoji,
-                style: const TextStyle(fontSize: 24),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEEEEEE), width: 0.64),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: RichText(
+                text: TextSpan(
+                  text: emoji,
+                  style: const TextStyle(fontSize: 24),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          // Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  category,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    color: AppColors.accent,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category,
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                      color: AppColors.accent,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
-                    color: Color(0xFF111111),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      height: 1.5,
+                      color: Color(0xFF111111),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.5,
-                    color: Color(0xFF666666),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
+                      color: Color(0xFF666666),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  readTime,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    color: Color(0xFF999999),
+                  const SizedBox(height: 8),
+                  Text(
+                    readTime,
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                      color: Color(0xFF999999),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
-        ],
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
+          ],
+        ),
       ),
     );
   }

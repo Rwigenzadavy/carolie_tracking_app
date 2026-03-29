@@ -1,9 +1,14 @@
+import 'package:carolie_tracking_app/src/presentation/controllers/auth_controller.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/meal_log_controller.dart';
+import 'package:carolie_tracking_app/src/presentation/controllers/preferences_controller.dart';
 import 'package:carolie_tracking_app/src/screens/scan_barcode_screen.dart';
 import 'package:carolie_tracking_app/src/screens/voice_input_screen.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
+import 'package:carolie_tracking_app/src/widgets/meal_log_editor_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class LogMealScreen extends StatefulWidget {
   const LogMealScreen({
@@ -20,131 +25,80 @@ class LogMealScreen extends StatefulWidget {
 }
 
 class _LogMealScreenState extends State<LogMealScreen> {
-  String? _searchQuery;
+  final TextEditingController _searchController = TextEditingController();
   bool _showScanBarcode = false;
   bool _showVoiceInput = false;
 
   static const _dishes = [
     (
       title: 'Jollof Rice',
-      subtitle: '~450 cal per serving',
-      portions: ['1 plate', '½ plate', '1 cup'],
+      calories: 450,
+      portions: ['1 plate', '1/2 plate', '1 cup'],
     ),
     (
       title: 'Egusi Soup with Fufu',
-      subtitle: '~520 cal per serving',
-      portions: ['1 bowl', '½ bowl', '1 wrap'],
+      calories: 520,
+      portions: ['1 bowl', '1/2 bowl', '1 wrap'],
     ),
     (
       title: 'Suya (Beef)',
-      subtitle: '~280 cal per serving',
+      calories: 280,
       portions: ['5 sticks', '3 sticks', '100g'],
     ),
     (
       title: 'Moi Moi',
-      subtitle: '~160 cal per serving',
+      calories: 160,
       portions: ['1 wrap', '2 wraps', '100g'],
     ),
     (
       title: 'Pounded Yam',
-      subtitle: '~330 cal per serving',
-      portions: ['1 wrap', '½ wrap', '200g'],
+      calories: 330,
+      portions: ['1 wrap', '1/2 wrap', '200g'],
     ),
     (
       title: 'Akara (Bean Cake)',
-      subtitle: '~180 cal per serving',
+      calories: 180,
       portions: ['3 pieces', '5 pieces', '1 piece'],
     ),
     (
       title: 'Fried Plantain',
-      subtitle: '~220 cal per serving',
+      calories: 220,
       portions: ['1 medium', '1 large', '5 slices'],
     ),
     (
       title: 'Chin Chin',
-      subtitle: '~140 cal per serving',
+      calories: 140,
       portions: ['1 handful', '1 cup', '50g'],
     ),
   ];
 
-  void _openScanBarcode() {
-    setState(() {
-      _showScanBarcode = true;
-    });
-  }
-
-  void _openVoiceInput() {
-    setState(() {
-      _showVoiceInput = true;
-    });
-  }
-
-  void _closeScanBarcode() {
-    setState(() {
-      _showScanBarcode = false;
-    });
-  }
-
-  void _closeVoiceInput() {
-    setState(() {
-      _showVoiceInput = false;
-    });
-  }
-
-  void _onBarcodeScanned(String barcode) {
-    setState(() {
-      _showScanBarcode = false;
-      _searchQuery = barcode;
-    });
-    _showResultSnackBar('Barcode scanned: $barcode');
-  }
-
-  void _onVoiceResult(String text) {
-    setState(() {
-      _showVoiceInput = false;
-      _searchQuery = text;
-    });
-    _showResultSnackBar('Voice input: $text');
-  }
-
-  void _showResultSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontFamily: 'Plus Jakarta Sans',
-          ),
-        ),
-        backgroundColor: AppColors.accent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show Scan Barcode Screen
     if (_showScanBarcode) {
       return ScanBarcodeScreen(
         onBarcodeScanned: _onBarcodeScanned,
-        onCancel: _closeScanBarcode,
+        onCancel: () => setState(() => _showScanBarcode = false),
       );
     }
 
-    // Show Voice Input Screen
     if (_showVoiceInput) {
       return VoiceInputScreen(
         onVoiceResult: _onVoiceResult,
-        onCancel: _closeVoiceInput,
+        onCancel: () => setState(() => _showVoiceInput = false),
       );
     }
 
-    // Main Log Meal Screen
+    final query = _searchController.text.trim().toLowerCase();
+    final filteredDishes = _dishes.where((dish) {
+      return query.isEmpty || dish.title.toLowerCase().contains(query);
+    }).toList();
+
     return AppViewport(
       bottomNavigationBar: AppBottomNavigation(
         currentScreen: AppScreen.logMeal,
@@ -154,32 +108,143 @@ class _LogMealScreenState extends State<LogMealScreen> {
         children: [
           _LogMealHero(
             onBackPressed: widget.onBackPressed,
-            onScanBarcode: _openScanBarcode,
-            onVoiceInput: _openVoiceInput,
-            searchQuery: _searchQuery,
+            onScanBarcode: () => setState(() => _showScanBarcode = true),
+            onVoiceInput: () => setState(() => _showVoiceInput = true),
+            searchController: _searchController,
+            onSearchChanged: (_) => setState(() {}),
           ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               children: [
-                const _ResultsHeader(),
+                _ResultsHeader(resultCount: filteredDishes.length),
                 const SizedBox(height: 16),
-                ..._dishes.expand(
-                  (dish) => [
-                    DishCard(
+                ...filteredDishes.map(
+                  (dish) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: DishCard(
                       title: dish.title,
-                      subtitle: dish.subtitle,
+                      calories: dish.calories,
                       portions: dish.portions,
+                      onLogPressed: (portion) => _logPresetDish(
+                        title: dish.title,
+                        calories: dish.calories,
+                        portion: portion,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                  ],
+                  ),
                 ),
+                if (filteredDishes.isEmpty)
+                  const _NoResultsState(),
                 const SizedBox(height: 12),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _logPresetDish({
+    required String title,
+    required int calories,
+    required String portion,
+  }) async {
+    final userId = context.read<AuthController>().currentUser?.id;
+    if (userId == null) {
+      return;
+    }
+
+    final result = await showMealLogEditorSheet(
+      context,
+      suggestedName: title,
+      suggestedCalories: calories,
+      suggestedMealType: context.read<PreferencesController>().defaultMealType,
+      suggestedPortion: portion,
+      suggestedSource: 'preset',
+    );
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await context.read<MealLogController>().addMealLog(
+      userId: userId,
+      mealName: result.mealName,
+      calories: result.calories,
+      mealType: result.mealType,
+      portion: result.portion,
+      source: result.source,
+    );
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Meal saved to Firestore')),
+    );
+  }
+
+  Future<void> _onBarcodeScanned(String barcode) async {
+    setState(() {
+      _showScanBarcode = false;
+      _searchController.text = barcode;
+    });
+
+    await _openCustomLog(
+      suggestedName: 'Scanned item $barcode',
+      suggestedSource: 'barcode',
+    );
+  }
+
+  Future<void> _onVoiceResult(String text) async {
+    setState(() {
+      _showVoiceInput = false;
+      _searchController.text = text;
+    });
+
+    await _openCustomLog(
+      suggestedName: text,
+      suggestedSource: 'voice',
+    );
+  }
+
+  Future<void> _openCustomLog({
+    required String suggestedName,
+    required String suggestedSource,
+  }) async {
+    final userId = context.read<AuthController>().currentUser?.id;
+    if (userId == null) {
+      return;
+    }
+
+    final result = await showMealLogEditorSheet(
+      context,
+      suggestedName: suggestedName,
+      suggestedCalories: 250,
+      suggestedMealType: context.read<PreferencesController>().defaultMealType,
+      suggestedPortion: '1 serving',
+      suggestedSource: suggestedSource,
+    );
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await context.read<MealLogController>().addMealLog(
+      userId: userId,
+      mealName: result.mealName,
+      calories: result.calories,
+      mealType: result.mealType,
+      portion: result.portion,
+      source: result.source,
+    );
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${result.mealName} saved')),
     );
   }
 }
@@ -189,13 +254,15 @@ class _LogMealHero extends StatelessWidget {
     required this.onBackPressed,
     required this.onScanBarcode,
     required this.onVoiceInput,
-    this.searchQuery,
+    required this.searchController,
+    required this.onSearchChanged,
   });
 
   final VoidCallback onBackPressed;
   final VoidCallback onScanBarcode;
   final VoidCallback onVoiceInput;
-  final String? searchQuery;
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -215,10 +282,7 @@ class _LogMealHero extends StatelessWidget {
                 key: const Key('logMealBackButton'),
                 onPressed: onBackPressed,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 24,
-                  height: 24,
-                ),
+                constraints: const BoxConstraints.tightFor(width: 24, height: 24),
                 icon: const Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 18,
@@ -239,7 +303,10 @@ class _LogMealHero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          _SearchField(query: searchQuery),
+          _SearchField(
+            controller: searchController,
+            onChanged: onSearchChanged,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -267,9 +334,13 @@ class _LogMealHero extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField({this.query});
+  const _SearchField({
+    required this.controller,
+    required this.onChanged,
+  });
 
-  final String? query;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -280,41 +351,47 @@ class _SearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x1AFFFFFF), width: 0.64),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            'assets/figma/log/search_icon',
-            width: 20,
-            height: 20,
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        style: const TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: 'Search local dishes...',
+          hintStyle: const TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 14,
+            color: AppColors.textSecondary,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              query ?? 'Search local dishes...',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: query != null ? Colors.white : AppColors.textSecondary,
-              ),
-              overflow: TextOverflow.ellipsis,
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SvgPicture.asset(
+              'assets/figma/log/search_icon',
+              width: 20,
+              height: 20,
             ),
           ),
-        ],
+          prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 20),
+        ),
       ),
     );
   }
 }
 
 class _ResultsHeader extends StatelessWidget {
-  const _ResultsHeader();
+  const _ResultsHeader({required this.resultCount});
+
+  final int resultCount;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Expanded(
+        const Expanded(
           child: Text(
             'VERIFIED LOCAL DISHES',
             style: TextStyle(
@@ -328,8 +405,8 @@ class _ResultsHeader extends StatelessWidget {
           ),
         ),
         Text(
-          '8 results',
-          style: TextStyle(
+          '$resultCount results',
+          style: const TextStyle(
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -387,17 +464,32 @@ class ActionPill extends StatelessWidget {
   }
 }
 
-class DishCard extends StatelessWidget {
+class DishCard extends StatefulWidget {
   const DishCard({
     super.key,
     required this.title,
-    required this.subtitle,
+    required this.calories,
     required this.portions,
+    required this.onLogPressed,
   });
 
   final String title;
-  final String subtitle;
+  final int calories;
   final List<String> portions;
+  final ValueChanged<String> onLogPressed;
+
+  @override
+  State<DishCard> createState() => _DishCardState();
+}
+
+class _DishCardState extends State<DishCard> {
+  late String _selectedPortion;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPortion = widget.portions.first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -417,7 +509,7 @@ class DishCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  title,
+                  widget.title,
                   style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 15,
@@ -447,7 +539,7 @@ class DishCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            subtitle,
+            '~${widget.calories} cal per serving',
             style: const TextStyle(
               fontFamily: 'Plus Jakarta Sans',
               fontSize: 13,
@@ -471,33 +563,72 @@ class DishCard extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: portions
-                .map(
-                  (portion) => Container(
-                    constraints: const BoxConstraints(minHeight: 34),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      portion,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                        color: AppColors.textSecondary,
-                      ),
+            children: widget.portions.map((portion) {
+              final isSelected = _selectedPortion == portion;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedPortion = portion),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 34),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.accentSoft : AppColors.chipBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected ? AppColors.accent : Colors.transparent,
                     ),
                   ),
-                )
-                .toList(),
+                  child: Text(
+                    portion,
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                      color: isSelected ? AppColors.accent : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => widget.onLogPressed(_selectedPortion),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Log this meal'),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NoResultsState extends StatelessWidget {
+  const _NoResultsState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: const Text(
+        'No preset dishes match your search yet. Try voice or barcode input to log a custom meal.',
+        style: TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }

@@ -19,48 +19,89 @@ class AppColors {
 
 class AppTheme {
   static ThemeData light() {
-    const textTheme = TextTheme(
+    return ThemeData(
+      useMaterial3: true,
+      fontFamily: 'Plus Jakarta Sans',
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.background,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.accent,
+        surface: AppColors.surface,
+      ),
+      textTheme: _buildTextTheme(Brightness.light),
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+    );
+  }
+
+  static ThemeData dark() {
+    return ThemeData(
+      useMaterial3: true,
+      fontFamily: 'Plus Jakarta Sans',
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.accent,
+        surface: Color(0xFF1E1E1E),
+      ),
+      textTheme: _buildTextTheme(Brightness.dark),
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+    );
+  }
+
+  static TextTheme _buildTextTheme(Brightness brightness) {
+    final textColor = brightness == Brightness.light
+        ? AppColors.textPrimary
+        : Colors.white;
+    final secondaryColor = brightness == Brightness.light
+        ? AppColors.textSecondary
+        : const Color(0xFFAAAAAA);
+
+    return TextTheme(
       headlineMedium: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 18,
         fontWeight: FontWeight.w600,
         height: 1.5,
-        color: AppColors.textPrimary,
+        color: textColor,
       ),
       titleMedium: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 15,
         fontWeight: FontWeight.w700,
         height: 1.5,
-        color: AppColors.textPrimary,
+        color: textColor,
       ),
       bodyLarge: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.5,
-        color: AppColors.textPrimary,
+        color: textColor,
       ),
       bodyMedium: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: FontWeight.w400,
         height: 1.5,
-        color: AppColors.textSecondary,
+        color: secondaryColor,
       ),
       labelLarge: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 13,
         fontWeight: FontWeight.w500,
         height: 1.5,
-        color: AppColors.textPrimary,
+        color: textColor,
       ),
       labelMedium: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: FontWeight.w500,
         height: 1.5,
-        color: AppColors.textSecondary,
+        color: secondaryColor,
       ),
       labelSmall: TextStyle(
         fontFamily: 'Plus Jakarta Sans',
@@ -68,22 +109,8 @@ class AppTheme {
         fontWeight: FontWeight.w700,
         letterSpacing: 1,
         height: 1.5,
-        color: AppColors.textSecondary,
+        color: secondaryColor,
       ),
-    );
-
-    return ThemeData(
-      useMaterial3: true,
-      fontFamily: 'Plus Jakarta Sans',
-      scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.light(
-        primary: AppColors.accent,
-        surface: AppColors.surface,
-      ),
-      textTheme: textTheme,
-      splashFactory: NoSplash.splashFactory,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
     );
   }
 }
