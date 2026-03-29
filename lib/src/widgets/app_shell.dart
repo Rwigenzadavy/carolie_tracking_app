@@ -2,7 +2,7 @@ import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-enum AppScreen { home, logMeal, learn }
+enum AppScreen { home, logMeal, learn, tribe }
 
 class AppViewport extends StatelessWidget {
   const AppViewport({
@@ -90,8 +90,9 @@ class AppBottomNavigation extends StatelessWidget {
             _BottomNavItem(
               label: 'Tribe',
               assetPath: _tribeIcon,
-              isSelected: false,
+              isSelected: currentScreen == AppScreen.tribe,
               applyColorFilter: true,
+              onTap: () => onTabSelected(AppScreen.tribe),
             ),
           ],
         ),
