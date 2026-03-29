@@ -2,7 +2,7 @@ import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-enum AppScreen { home, logMeal }
+enum AppScreen { home, logMeal, learn }
 
 class AppViewport extends StatelessWidget {
   const AppViewport({
@@ -46,16 +46,11 @@ class AppBottomNavigation extends StatelessWidget {
   static const _homeInactive = 'assets/figma/log/nav_home';
   static const _logActive = 'assets/figma/log/nav_log';
   static const _logInactive = 'assets/figma/home/nav_log';
-  static const _learnHome = 'assets/figma/home/nav_learn';
-  static const _learnLog = 'assets/figma/log/nav_learn';
-  static const _tribeHome = 'assets/figma/home/nav_tribe';
-  static const _tribeLog = 'assets/figma/log/nav_tribe';
+  static const _learnIcon = 'assets/figma/home/nav_learn';
+  static const _tribeIcon = 'assets/figma/home/nav_tribe';
 
   @override
   Widget build(BuildContext context) {
-    final learnIcon = currentScreen == AppScreen.home ? _learnHome : _learnLog;
-    final tribeIcon = currentScreen == AppScreen.home ? _tribeHome : _tribeLog;
-
     return Container(
       height: 80,
       decoration: const BoxDecoration(
@@ -87,13 +82,16 @@ class AppBottomNavigation extends StatelessWidget {
             ),
             _BottomNavItem(
               label: 'Learn',
-              assetPath: learnIcon,
-              isSelected: false,
+              assetPath: _learnIcon,
+              isSelected: currentScreen == AppScreen.learn,
+              applyColorFilter: true,
+              onTap: () => onTabSelected(AppScreen.learn),
             ),
             _BottomNavItem(
               label: 'Tribe',
-              assetPath: tribeIcon,
+              assetPath: _tribeIcon,
               isSelected: false,
+              applyColorFilter: true,
             ),
           ],
         ),
@@ -109,12 +107,14 @@ class _BottomNavItem extends StatelessWidget {
     required this.assetPath,
     required this.isSelected,
     this.onTap,
+    this.applyColorFilter = false,
   });
 
   final String label;
   final String assetPath;
   final bool isSelected;
   final VoidCallback? onTap;
+  final bool applyColorFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +126,14 @@ class _BottomNavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(assetPath, width: 24, height: 24),
+            SvgPicture.asset(
+              assetPath,
+              width: 24,
+              height: 24,
+              colorFilter: applyColorFilter && isSelected
+                  ? const ColorFilter.mode(AppColors.accent, BlendMode.srcIn)
+                  : null,
+            ),
             const SizedBox(height: 4),
             Text(
               label,
