@@ -1,4 +1,5 @@
 import 'package:carolie_tracking_app/src/screens/home_screen.dart';
+import 'package:carolie_tracking_app/src/screens/learn_screen.dart';
 import 'package:carolie_tracking_app/src/screens/log_meal_screen.dart';
 import 'package:carolie_tracking_app/src/theme/app_theme.dart';
 import 'package:carolie_tracking_app/src/widgets/app_shell.dart';
@@ -47,6 +48,8 @@ class _CalorieTrackerFlowState extends State<CalorieTrackerFlow> {
           onBackPressed: () => _showScreen(AppScreen.home),
           onTabSelected: _showScreen,
         );
+      case AppScreen.learn:
+        return LearnScreen(onTabSelected: _showScreen);
     }
   }
 }
