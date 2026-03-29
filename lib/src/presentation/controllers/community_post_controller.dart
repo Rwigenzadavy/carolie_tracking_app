@@ -12,11 +12,15 @@ class CommunityPostController extends ChangeNotifier {
 
   List<CommunityPost> _posts = const [];
   bool _isLoading = false;
+  String? _boundUserId;
 
   List<CommunityPost> get posts => _posts;
   bool get isLoading => _isLoading;
 
   void bindUser(String? userId) {
+    if (_boundUserId == userId) return;
+    _boundUserId = userId;
+
     _subscription?.cancel();
     _subscription = null;
 
@@ -30,11 +34,17 @@ class CommunityPostController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _subscription = _repository.watchPosts().listen((posts) {
-      _posts = posts;
-      _isLoading = false;
-      notifyListeners();
-    });
+    _subscription = _repository.watchPosts().listen(
+      (posts) {
+        _posts = posts;
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (_) {
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
   }
 
   Future<void> addPost({

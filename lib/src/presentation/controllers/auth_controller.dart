@@ -63,6 +63,10 @@ class AuthController extends ChangeNotifier {
     return _runBusyAction(() => _authRepository.sendPasswordResetEmail(email));
   }
 
+  Future<void> resendVerificationEmail() {
+    return _authRepository.resendVerificationEmail();
+  }
+
   Future<void> signOut() {
     return _runBusyAction(_authRepository.signOut);
   }

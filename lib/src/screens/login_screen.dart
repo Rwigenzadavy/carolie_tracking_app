@@ -476,6 +476,7 @@ class _LoginScreenState extends State<LoginScreen> {
         obscureText: isPassword && !isVisible,
         keyboardType: keyboardType,
         textInputAction: textInputAction,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: validator,
         onFieldSubmitted: onFieldSubmitted,
         style: GoogleFonts.plusJakartaSans(

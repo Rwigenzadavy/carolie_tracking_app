@@ -40,7 +40,11 @@ class FirebaseAuthRepository implements AuthRepository {
     );
     await credentials.user?.updateDisplayName(name.trim());
     await credentials.user?.reload();
-    await credentials.user?.sendEmailVerification();
+    try {
+      await credentials.user?.sendEmailVerification();
+    } catch (_) {
+      // Verification email failed (e.g. rate limit) — account is still created.
+    }
     await _upsertUser(
       _firebaseAuth.currentUser,
       displayNameOverride: name.trim(),
@@ -77,12 +81,18 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signInAnonymously() async {
     final credentials = await _firebaseAuth.signInAnonymously();
-    await _upsertUser(credentials.user, displayNameOverride: 'Guest User');
+    await credentials.user?.updateDisplayName('Guest');
+    await _upsertUser(credentials.user, displayNameOverride: 'Guest');
   }
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {
     await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  @override
+  Future<void> resendVerificationEmail() async {
+    await _firebaseAuth.currentUser?.sendEmailVerification();
   }
 
   @override
@@ -95,12 +105,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Stream<AppUser?> watchAuthState() {
-    return _firebaseAuth.authStateChanges().asyncMap((user) async {
+    return _firebaseAuth.userChanges().asyncMap((user) async {
       if (user == null) {
         return null;
       }
 
-      await user.reload();
       final refreshedUser = _firebaseAuth.currentUser ?? user;
       await _upsertUser(refreshedUser);
       return _mapUser(refreshedUser);
@@ -112,10 +121,14 @@ class FirebaseAuthRepository implements AuthRepository {
       return;
     }
 
+    final name =
+        displayNameOverride ?? user.displayName ?? user.email?.split('@').first ?? '';
+    if (name.isEmpty) return;
+
     final model = AppUserModel(
       id: user.uid,
       email: user.email ?? '',
-      displayName: displayNameOverride ?? user.displayName ?? 'Carolie User',
+      displayName: name,
       emailVerified: user.emailVerified,
       photoUrl: user.photoURL,
     );
@@ -134,7 +147,8 @@ class FirebaseAuthRepository implements AuthRepository {
     return AppUserModel(
       id: user.uid,
       email: user.email ?? '',
-      displayName: user.displayName ?? 'Carolie User',
+      displayName:
+          user.displayName ?? user.email?.split('@').first ?? '',
       emailVerified: user.emailVerified,
       photoUrl: user.photoURL,
     );

@@ -303,24 +303,42 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     final authController = context.read<AuthController>();
-    final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final email = _emailController.text.trim();
 
     try {
       await authController.signUpWithEmailPassword(
         name: _nameController.text,
-        email: _emailController.text,
+        email: email,
         password: _passwordController.text,
       );
-      navigator.popUntil((route) => route.isFirst);
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Account created. Check your email for verification.'),
-        ),
-      );
     } on Exception catch (error) {
+      if (!mounted) return;
       _showError(scaffoldMessenger, error);
+      return;
     }
+
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text('Verify your email'),
+        content: Text(
+          'A verification link has been sent to $email.\n\n'
+          'Please check your inbox (and spam folder) and tap the link to activate your account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _continueWithGoogle(BuildContext context) async {
@@ -379,6 +397,7 @@ class _SignupScreenState extends State<SignupScreen> {
         obscureText: isPassword && !isVisible,
         keyboardType: keyboardType,
         textInputAction: textInputAction,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: validator,
         onFieldSubmitted: onFieldSubmitted,
         style: GoogleFonts.plusJakartaSans(

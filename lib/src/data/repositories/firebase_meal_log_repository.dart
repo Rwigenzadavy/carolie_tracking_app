@@ -39,7 +39,16 @@ class FirebaseMealLogRepository implements MealLogRepository {
 
   @override
   Stream<List<MealLog>> watchMealLogs(String userId) {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
     return _collection(userId)
+        .where(
+          'loggedAt',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where('loggedAt', isLessThan: Timestamp.fromDate(endOfDay))
         .orderBy('loggedAt', descending: true)
         .snapshots()
         .map(

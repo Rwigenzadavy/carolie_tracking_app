@@ -47,6 +47,8 @@ class HomeScreen extends StatelessWidget {
             onLogMealPressed: onLogMealPressed,
             onSettingsPressed: () => _openSettings(context),
           ),
+          if (user != null && user.email.isNotEmpty && !user.emailVerified)
+            _EmailVerificationBanner(email: user.email),
           Container(
             color: Colors.white,
             child: Column(
@@ -163,6 +165,94 @@ class HomeScreen extends StatelessWidget {
     final cleaned = (displayName ?? 'there').trim();
     if (cleaned.isEmpty) return 'there';
     return cleaned.split(' ').first;
+  }
+}
+
+// ── Email Verification Banner ──────────────────────────────────────────────────
+
+class _EmailVerificationBanner extends StatefulWidget {
+  const _EmailVerificationBanner({required this.email});
+  final String email;
+
+  @override
+  State<_EmailVerificationBanner> createState() =>
+      _EmailVerificationBannerState();
+}
+
+class _EmailVerificationBannerState extends State<_EmailVerificationBanner> {
+  bool _sending = false;
+
+  Future<void> _resend() async {
+    setState(() => _sending = true);
+    try {
+      await context.read<AuthController>().resendVerificationEmail();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification email sent — check your inbox')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send email. Try again later.')),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFFFF8F0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          const Text('✉️', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Verify your email',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Check ${widget.email} for a verification link.',
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: _sending ? null : _resend,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              _sending ? '...' : 'Resend',
+              style: const TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -502,7 +592,7 @@ class _HomeHero extends StatelessWidget {
             children: [
               Expanded(
                 child: MacroCard(
-                    value: '${(totalCalories * 0.45).round()}g',
+                    value: '${(totalCalories * 0.50).round()}g',
                     label: 'Carbs'),
               ),
               const SizedBox(width: 12),
@@ -514,7 +604,7 @@ class _HomeHero extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: MacroCard(
-                    value: '${(totalCalories * 0.15).round()}g',
+                    value: '${(totalCalories * 0.25).round()}g',
                     label: 'Fat'),
               ),
             ],

@@ -29,16 +29,24 @@ class MealLogController extends ChangeNotifier {
 
     if (userId == null) {
       _isLoading = false;
+      notifyListeners();
       return;
     }
 
     _isLoading = true;
+    notifyListeners();
 
-    _subscription = _mealLogRepository.watchMealLogs(userId).listen((logs) {
-      _mealLogs = logs;
-      _isLoading = false;
-      notifyListeners();
-    });
+    _subscription = _mealLogRepository.watchMealLogs(userId).listen(
+      (logs) {
+        _mealLogs = logs;
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (_) {
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
   }
 
   Future<void> addMealLog({
