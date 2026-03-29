@@ -69,6 +69,8 @@ class CommunityPostController extends ChangeNotifier {
     );
   }
 
+  Future<void> likePost(String postId) => _repository.likePost(postId);
+
   @override
   void dispose() {
     _subscription?.cancel();

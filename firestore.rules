@@ -32,7 +32,9 @@ service cloud.firestore {
         && request.resource.data.body.size() > 0
         && request.resource.data.tag is string
         && request.resource.data.username is string;
-      allow update, delete: if isOwner(resource.data.userId);
+      allow update: if isOwner(resource.data.userId)
+        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']));
+      allow delete: if isOwner(resource.data.userId);
     }
   }
 }

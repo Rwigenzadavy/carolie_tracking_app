@@ -31,4 +31,11 @@ class FirebaseCommunityPostRepository implements CommunityPostRepository {
     final model = CommunityPostModel.fromEntity(post);
     await _collection.doc(post.id).set(model.toMap());
   }
+
+  @override
+  Future<void> likePost(String postId) async {
+    await _collection.doc(postId).update({
+      'likes': FieldValue.increment(1),
+    });
+  }
 }

@@ -131,6 +131,7 @@ class CommunityScreen extends StatelessWidget {
             bottom: 16,
             right: 16,
             child: FloatingActionButton(
+              key: const Key('communityFab'),
               onPressed: () => _openNewPostSheet(context),
               backgroundColor: AppColors.accent,
               elevation: 4,
@@ -165,16 +166,28 @@ class _NewPostSheetState extends State<_NewPostSheet> {
 
   Future<void> _post() async {
     final body = _controller.text.trim();
-    if (body.isEmpty) return;
-
-    final authController = context.read<AuthController>();
-    final communityController = context.read<CommunityPostController>();
-    final user = authController.currentUser;
-    if (user == null) return;
+    if (body.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Write something before posting.')),
+      );
+      return;
+    }
 
     setState(() => _isPosting = true);
 
     try {
+      final authController = context.read<AuthController>();
+      final communityController = context.read<CommunityPostController>();
+      final user = authController.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You must be signed in to post.')),
+          );
+          setState(() => _isPosting = false);
+        }
+        return;
+      }
       await communityController.addPost(
         userId: user.id,
         username: user.displayName.isNotEmpty ? user.displayName : 'Anonymous',
@@ -183,10 +196,10 @@ class _NewPostSheetState extends State<_NewPostSheet> {
         tag: _selectedTag,
       );
       if (mounted) Navigator.of(context).pop();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to post. Please try again.')),
+          SnackBar(content: Text('Failed to post: ${e.toString()}')),
         );
         setState(() => _isPosting = false);
       }
@@ -203,102 +216,120 @@ class _NewPostSheetState extends State<_NewPostSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Share with the community',
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _selectedTag, // ignore: deprecated_member_use
-            decoration: InputDecoration(
-              labelText: 'Group',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            ),
-            items: _tags
-                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                .toList(),
-            onChanged: (v) { if (v != null) setState(() => _selectedTag = v); },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _controller,
-            maxLines: 4,
-            autofocus: true,
-            style: const TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 14,
-              color: AppColors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              hintText: "What's on your wellness journey today?",
-              hintStyle: const TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 14,
-                color: AppColors.textMuted,
-              ),
-              filled: true,
-              fillColor: AppColors.chipBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.all(16),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: FilledButton(
-              onPressed: _isPosting ? null : _post,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
+    return SafeArea(
+      top: false,
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              child: _isPosting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text(
-                      'Post',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+              const SizedBox(height: 16),
+              const Text(
+                'Share with the community',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedTag, // ignore: deprecated_member_use
+                decoration: InputDecoration(
+                  labelText: 'Group',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                ),
+                items: _tags
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedTag = v);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('communityPostField'),
+                controller: _controller,
+                maxLines: 4,
+                autofocus: true,
+                style: const TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: "What's on your wellness journey today?",
+                  hintStyle: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 14,
+                    color: AppColors.textMuted,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.chipBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  key: const Key('communitySubmitPostButton'),
+                  onPressed: _isPosting ? null : _post,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
                     ),
-            ),
+                  ),
+                  child: _isPosting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Post',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -513,7 +544,7 @@ class _PostCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              _EngagementButton(icon: '❤️', count: post.likes),
+              LikeButton(postId: post.id, likes: post.likes),
               const SizedBox(width: 20),
               const _EngagementButton(icon: '🔗', count: null),
             ],
@@ -530,6 +561,66 @@ class _PostCard extends StatelessWidget {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d ago';
+  }
+}
+
+// ── Like Button ───────────────────────────────────────────────────────────────
+
+class LikeButton extends StatefulWidget {
+  const LikeButton({
+    super.key,
+    required this.postId,
+    required this.likes,
+  });
+  final String postId;
+  final int likes;
+
+  @override
+  State<LikeButton> createState() => _LikeButtonState();
+}
+
+class _LikeButtonState extends State<LikeButton> {
+  bool _isLiking = false;
+
+  Future<void> _onTap() async {
+    if (_isLiking) return;
+    setState(() => _isLiking = true);
+    try {
+      await context.read<CommunityPostController>().likePost(widget.postId);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to like post.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLiking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _isLiking ? null : _onTap,
+      child: Row(
+        children: [
+          Text(
+            _isLiking ? '🤍' : '❤️',
+            style: const TextStyle(fontSize: 15),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${widget.likes}',
+            style: const TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
