@@ -1,4 +1,6 @@
 import 'package:carolie_tracking_app/src/presentation/controllers/auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:carolie_tracking_app/src/utils/auth_error_message.dart';
 import 'package:carolie_tracking_app/src/utils/auth_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -162,7 +164,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: authController.isBusy
                                 ? null
                                 : () => _continueWithGoogle(context),
-                            icon: const Icon(Icons.g_mobiledata_rounded, size: 26),
+                            icon: const Icon(
+                              Icons.g_mobiledata_rounded,
+                              size: 26,
+                            ),
                             label: const Text('Continue with Google'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF111111),
@@ -200,9 +205,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 30),
                         Row(
                           children: [
-                            const Expanded(child: Divider(color: Color(0xFFEEEEEE))),
+                            const Expanded(
+                              child: Divider(color: Color(0xFFEEEEEE)),
+                            ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 'OR',
                                 style: GoogleFonts.plusJakartaSans(
@@ -211,7 +220,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
-                            const Expanded(child: Divider(color: Color(0xFFEEEEEE))),
+                            const Expanded(
+                              child: Divider(color: Color(0xFFEEEEEE)),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 30),
@@ -273,11 +284,13 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+      if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Signed in successfully')),
       );
     } on Exception catch (error) {
-      _showError(scaffoldMessenger, error);
+      if (!mounted) return;
+      _showEmailPasswordError(scaffoldMessenger, error);
     }
   }
 
@@ -287,10 +300,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await authController.signInWithGoogle();
+      if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Google sign-in successful')),
       );
     } on Exception catch (error) {
+      if (!mounted) return;
       _showError(scaffoldMessenger, error);
     }
   }
@@ -301,10 +316,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await authController.signInAnonymously();
+      if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Signed in as guest')),
       );
     } on Exception catch (error) {
+      if (!mounted) return;
       _showError(scaffoldMessenger, error);
     }
   }
@@ -313,9 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final emailError = AuthValidators.email(_emailController.text);
     if (emailError != null) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text(emailError)),
-      );
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text(emailError)));
       return;
     }
 
@@ -323,18 +338,108 @@ class _LoginScreenState extends State<LoginScreen> {
       await context.read<AuthController>().sendPasswordResetEmail(
         _emailController.text,
       );
+      if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Password reset email sent')),
       );
     } on Exception catch (error) {
+      if (!mounted) return;
       _showError(scaffoldMessenger, error);
     }
   }
 
   void _showError(ScaffoldMessengerState scaffoldMessenger, Object error) {
     scaffoldMessenger.showSnackBar(
-      SnackBar(content: Text(error.toString())),
+      SnackBar(content: Text(authErrorMessage(error))),
     );
+  }
+
+  void _showEmailPasswordError(
+    ScaffoldMessengerState scaffoldMessenger,
+    Object error,
+  ) {
+    if (error is FirebaseAuthException && error.code == 'invalid-credential') {
+      showModalBottomSheet<void>(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sign-in help',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111111),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'That email/password sign-in did not work. This usually means the password is wrong, or this account was created with Google instead.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      color: const Color(0xFF666666),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _resetPassword(this.context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD96C2C),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text('Send password reset email'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _continueWithGoogle(this.context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text('Continue with Google'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      return;
+    }
+
+    _showError(scaffoldMessenger, error);
   }
 
   Widget _buildLabel(String text) {
@@ -383,7 +488,11 @@ class _LoginScreenState extends State<LoginScreen> {
             color: const Color(0xFF999999),
             fontSize: 14,
           ),
-          prefixIcon: Icon(prefixIcon, color: const Color(0xFF666666), size: 20),
+          prefixIcon: Icon(
+            prefixIcon,
+            color: const Color(0xFF666666),
+            size: 20,
+          ),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
@@ -397,7 +506,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );

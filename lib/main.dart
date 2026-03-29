@@ -14,13 +14,13 @@ import 'package:carolie_tracking_app/src/presentation/controllers/meal_log_contr
 import 'package:carolie_tracking_app/src/presentation/controllers/preferences_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await GoogleSignIn.instance.initialize();
 
   final prefsRepo = SharedPrefsPreferencesRepository();
   final prefsController = PreferencesController(prefsRepo);
@@ -29,26 +29,23 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<AuthRepository>(
-          create: (_) => FirebaseAuthRepository(),
-        ),
-        Provider<MealLogRepository>(
-          create: (_) => FirebaseMealLogRepository(),
-        ),
+        Provider<AuthRepository>(create: (_) => FirebaseAuthRepository()),
+        Provider<MealLogRepository>(create: (_) => FirebaseMealLogRepository()),
         Provider<CommunityPostRepository>(
           create: (_) => FirebaseCommunityPostRepository(),
         ),
-        Provider<PreferencesRepository>(
-          create: (_) => prefsRepo,
-        ),
+        Provider<PreferencesRepository>(create: (_) => prefsRepo),
         ChangeNotifierProvider<PreferencesController>.value(
           value: prefsController,
         ),
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(context.read<AuthRepository>()),
         ),
-        ChangeNotifierProxyProvider2<AuthController, MealLogRepository,
-            MealLogController>(
+        ChangeNotifierProxyProvider2<
+          AuthController,
+          MealLogRepository,
+          MealLogController
+        >(
           create: (context) =>
               MealLogController(context.read<MealLogRepository>()),
           update: (_, authController, mealLogRepository, mealLogController) {
@@ -58,8 +55,11 @@ Future<void> main() async {
             return controller;
           },
         ),
-        ChangeNotifierProxyProvider2<AuthController, CommunityPostRepository,
-            CommunityPostController>(
+        ChangeNotifierProxyProvider2<
+          AuthController,
+          CommunityPostRepository,
+          CommunityPostController
+        >(
           create: (context) =>
               CommunityPostController(context.read<CommunityPostRepository>()),
           update: (_, authController, communityRepo, communityController) {

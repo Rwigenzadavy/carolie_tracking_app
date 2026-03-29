@@ -50,11 +50,24 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signInWithGoogle() async {
     final googleUser = await GoogleSignIn.instance.authenticate();
+    final authorizationClient = googleUser.authorizationClient;
+    final authorization =
+        await authorizationClient.authorizationForScopes(const <String>[]) ??
+        await authorizationClient.authorizeScopes(const <String>[]);
 
     final authentication = googleUser.authentication;
+    final idToken = authentication.idToken;
+
+    if (idToken == null || idToken.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-credential',
+        message: 'Google Sign-In did not return a valid ID token.',
+      );
+    }
 
     final credential = GoogleAuthProvider.credential(
-      idToken: authentication.idToken,
+      idToken: idToken,
+      accessToken: authorization.accessToken,
     );
 
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
@@ -64,10 +77,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signInAnonymously() async {
     final credentials = await _firebaseAuth.signInAnonymously();
-    await _upsertUser(
-      credentials.user,
-      displayNameOverride: 'Guest User',
-    );
+    await _upsertUser(credentials.user, displayNameOverride: 'Guest User');
   }
 
   @override
@@ -97,10 +107,7 @@ class FirebaseAuthRepository implements AuthRepository {
     });
   }
 
-  Future<void> _upsertUser(
-    User? user, {
-    String? displayNameOverride,
-  }) async {
+  Future<void> _upsertUser(User? user, {String? displayNameOverride}) async {
     if (user == null) {
       return;
     }
