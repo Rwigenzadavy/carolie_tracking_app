@@ -26,45 +26,44 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  static const _examplePrompts = [
-    'One plate of jollof rice with chicken',
-    'Two wraps of moi moi',
-    'Half bowl of egusi soup with fufu',
-  ];
-
   @override
   void initState() {
     super.initState();
-    _initSpeech();
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.18).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    _initSpeech();
   }
 
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onError: (error) {
         debugPrint('Speech recognition error: $error');
-        setState(() {
-          _isListening = false;
-        });
-        _pulseController.stop();
+        if (mounted) {
+          setState(() => _isListening = false);
+          _pulseController.stop();
+        }
       },
       onStatus: (status) {
         debugPrint('Speech recognition status: $status');
-        if (status == 'done' || status == 'notListening') {
-          setState(() {
-            _isListening = false;
-          });
+        if ((status == 'done' || status == 'notListening') && mounted) {
+          setState(() => _isListening = false);
           _pulseController.stop();
         }
       },
     );
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+      if (_speechEnabled) {
+        _startListening();
+      } else {
+        _showPermissionDialog();
+      }
+    }
   }
 
   void _startListening() async {
@@ -72,7 +71,6 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
       _showPermissionDialog();
       return;
     }
-
     setState(() {
       _isListening = true;
       _recognizedText = '';
@@ -90,21 +88,18 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
 
   void _stopListening() async {
     await _speechToText.stop();
-    setState(() {
-      _isListening = false;
-    });
+    setState(() => _isListening = false);
     _pulseController.stop();
 
     if (_recognizedText.isNotEmpty) {
       widget.onVoiceResult(_recognizedText);
+    } else {
+      widget.onCancel();
     }
   }
 
   void _onSpeechResult(SpeechRecognitionResult result) {
-    setState(() {
-      _recognizedText = result.recognizedWords;
-    });
-
+    setState(() => _recognizedText = result.recognizedWords);
     if (result.finalResult && _recognizedText.isNotEmpty) {
       _stopListening();
     }
@@ -115,9 +110,7 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Microphone Permission',
           style: TextStyle(
@@ -149,10 +142,6 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
     );
   }
 
-  void _selectExample(String text) {
-    widget.onVoiceResult(text);
-  }
-
   @override
   void dispose() {
     _pulseController.dispose();
@@ -163,13 +152,14 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0F0D),
+      backgroundColor: AppColors.heroBackground,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
+            // ── Header ──────────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -186,22 +176,14 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
                   GestureDetector(
                     onTap: widget.onCancel,
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0x1AFFFFFF),
-                          width: 0.64,
-                        ),
                       ),
                       child: const Center(
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        child: Icon(Icons.close, color: Colors.white, size: 20),
                       ),
                     ),
                   ),
@@ -209,218 +191,118 @@ class _VoiceInputScreenState extends State<VoiceInputScreen>
               ),
             ),
 
-            const Spacer(flex: 2),
-
-            // Microphone Icon with pulse animation
-            AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _isListening ? _pulseAnimation.value : 1.0,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: _isListening
-                          ? AppColors.accent.withValues(alpha: 0.2)
-                          : const Color(0xFF2A2A2A),
-                      shape: BoxShape.circle,
-                      border: _isListening
-                          ? Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.5),
-                              width: 3,
-                            )
-                          : null,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        color: _isListening ? AppColors.accent : Colors.white,
-                        size: 48,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 32),
-
-            // Title text
-            const Text(
-              'Tell us what you ate',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-                color: Colors.white,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Subtitle
-            Text(
-              _isListening
-                  ? 'Listening...'
-                  : 'Say the name of your dish and portion',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 1.5,
-                color: Colors.white.withValues(alpha: 0.6),
-              ),
-            ),
-
-            // Recognized text display
-            if (_recognizedText.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 40),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  _recognizedText,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-
-            const Spacer(),
-
-            // Examples section
-            if (!_isListening) ...[
-              Text(
-                'EXAMPLES',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                  color: Colors.white.withValues(alpha: 0.4),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...List.generate(_examplePrompts.length, (index) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                  child: GestureDetector(
-                    onTap: () => _selectExample(_examplePrompts[index]),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0x1AFFFFFF),
-                          width: 0.64,
-                        ),
-                      ),
-                      child: Text(
-                        _examplePrompts[index],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-
-            const Spacer(),
-
-            // Buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            // ── Mic button — vertically centred in the remaining space ──────
+            Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Start/Stop Recording Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: FilledButton(
-                      onPressed: _isListening ? _stopListening : _startListening,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  // Pulsing mic button
+                  AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: _isListening ? Colors.red : Colors.white,
-                              shape: BoxShape.circle,
+                          // Outer glow ring (pulses)
+                          Transform.scale(
+                            scale: _isListening ? _pulseAnimation.value : 1.0,
+                            child: Container(
+                              width: 182,
+                              height: 182,
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _isListening ? 'Stop Recording' : 'Start Recording',
-                            style: const TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          // Main orange circle with glow shadow
+                          Container(
+                            width: 134,
+                            height: 134,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accent.withValues(alpha: 0.6),
+                                  blurRadius: 40,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.mic,
+                                color: Colors.white,
+                                size: 58,
+                              ),
                             ),
                           ),
                         ],
-                      ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // "Listening…" label
+                  Text(
+                    _recognizedText.isNotEmpty
+                        ? _recognizedText
+                        : 'Listening...',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                      color: Colors.white,
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
-                  // Cancel Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: TextButton(
-                      onPressed: widget.onCancel,
-                      style: TextButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A1A1A),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                  // Subtitle
+                  Text(
+                    'Speak clearly and mention portion sizes',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // ── Stop button ─────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: SizedBox(
+                height: 57,
+                child: OutlinedButton(
+                  onPressed: _stopListening,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
+                    side: const BorderSide(color: Colors.white, width: 1.9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text(
+                    'Stop',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
