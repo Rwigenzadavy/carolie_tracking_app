@@ -272,6 +272,4 @@ flutter test      # All tests pass
 
 ## Group Contribution Tracker
 
-[Group Contribution Tracker](https://docs.google.com/spreadsheets/d/your-tracker-link-here)
-
-> Replace the link above with your team's actual Google Sheets contribution tracker before submission.
+[Group Contribution Tracker](https://docs.google.com/spreadsheets/d/1dh1Dx5-x_G1Fdz454Y5vsrT-upojTvs3C68xphJH8ds/edit?usp=sharing)
